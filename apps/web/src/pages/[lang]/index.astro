@@ -1,5 +1,18 @@
 ---
-import { guardLocale, SUPPORTED_LOCALES } from "../../lib/i18n";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+
+import { guardLocale, SUPPORTED_LOCALES, type Locale } from "../../lib/i18n";
+
+import HeroSection from "../../components/home/HeroSection.astro";
+
+import NoticiasPreviewSection from "../../components/home/NoticiasPreviewSection.astro";
+
+import Wheel from "../../components/general/Wheel.astro";
+
+import TiendaPreviewSection from "../../components/home/TiendaPreviewSection.astro";
+
+import PageLoader from "../../components/ui/PageLoader.astro";
+
 
 export function getStaticPaths() {
   return SUPPORTED_LOCALES.map((lang) => ({ params: { lang } }));
@@ -9,5 +22,13 @@ const { lang } = Astro.params as { lang: string };
 const invalid = guardLocale(lang);
 if (invalid) return invalid;
 
-// WIP: redirect /{lang} → /{lang}/wip (revert when ready to launch)
-return Astro.redirect(`/${lang}/wip`, 302);
+const locale = lang as Locale;
+---
+
+<BaseLayout lang={locale} title="Inicio">
+  <PageLoader />
+  <HeroSection lang={locale} />
+  <NoticiasPreviewSection lang={locale} />
+  <Wheel lang={locale} />
+  <TiendaPreviewSection lang={locale} />
+</BaseLayout>

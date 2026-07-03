@@ -62,7 +62,8 @@
       "PowerShell(head -20)",
       "Bash(pnpm --filter web add @astrojs/cloudflare)",
       "Bash(pnpm --filter web add @astrojs/cloudflare@12)",
-      "Bash(pnpm --filter web typecheck)"
+      "Bash(pnpm --filter web typecheck)",
+      "Bash(Remove-Item \"c:\\\\Users\\\\frede\\\\Documents\\\\Clientes\\\\1_Websites\\\\Tovar\\\\fit-web\\\\apps\\\\web\\\\public\\\\_redirects\")"
     ]
   }
 }
