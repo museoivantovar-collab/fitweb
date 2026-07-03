@@ -1,0 +1,170 @@
+---
+import type { Locale } from "@/lib/i18n";
+import { usePublicamosTranslations } from "./publicamos.i18n";
+import type { Publicacion } from "@fundacion/types";
+
+interface Props {
+  lang: Locale;
+  publicaciones: Publicacion[];
+}
+
+const { lang, publicaciones } = Astro.props;
+const t = usePublicamosTranslations(lang);
+
+const itemColors = ["bg-c2", "bg-c3", "bg-c4", "bg-c5", "bg-c6"];
+---
+
+<div class="flex flex-col mt-6">
+  {publicaciones.map((pub, i) => {
+    const isFirst = i === 0;
+    const bgColor = itemColors[i % itemColors.length];
+    return (
+      <div
+        data-accordion-item={pub.id}
+        data-accordion-active={isFirst ? "true" : "false"}
+        class="group"
+      >
+        <button
+          data-accordion-trigger={pub.id}
+          class:list={[
+            "w-full text-left py-4 px-5 flex items-center transition-all duration-300",
+            bgColor,
+          ]}
+          aria-expanded={isFirst ? "true" : "false"}
+        >
+          <span class="accordion-title font-bold text-3xl tracking-tight">{pub.titulo}</span>
+        </button>
+
+        <div
+          data-accordion-panel={pub.id}
+          class="overflow-hidden"
+          style={isFirst ? "" : "height:0"}
+        >
+          <div data-accordion-inner>
+          <div class:list={[bgColor, "text-c1"]}>
+            <div class="p-8">
+              {pub.extracto && (
+                <p class="text-sm md:text-base lg:text-lg leading-snug mb-8 max-w-3xl opacity-90">
+                  {pub.extracto}
+                </p>
+              )}
+
+              {pub.tiendaUrl && (
+                <a
+                  href={pub.tiendaUrl.startsWith("http") ? pub.tiendaUrl : `https://${pub.tiendaUrl}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="group inline-flex items-stretch self-start font-normal text-base h-10 cursor-pointer"
+                >
+                  <span class="px-6 flex items-center bg-c1 text-c7">{t.accordion.visitarTienda}</span>
+                  <div class="bg-c1 p-2 flex items-center">
+                    <svg width="28" height="18" viewBox="0 0 45 29" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M44.4875 4.02528C44.4701 4.05591 38.9271 6.65046 31.073 7.89305V0H14.1964V7.63491C9.45266 6.61983 4.63944 4.64657 0.152031 1.23821L0 1.71512C0.078193 1.96014 7.18072 19.5314 17.5109 26.4137C20.517 28.3913 23.7794 28.8945 27.2894 27.9319C33.2711 25.7837 39.0878 17.9562 44.6395 4.51094L44.4831 4.02528H44.4875ZM17.7237 8.2212V3.54837H27.5456V8.33058C24.4657 8.6106 21.1425 8.63685 17.7237 8.2212Z" class="fill-c7"/>
+                    </svg>
+                  </div>
+                </a>
+              )}
+            </div>
+
+            {pub.documentalUrl && pub.documentalTitulo && (
+              <a
+                href={pub.documentalUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="block bg-black/10 text-c1 font-bold text-sm px-8 py-4 hover:bg-black/20 transition-colors border-t border-c1/20"
+              >
+                {t.accordion.documentalPrefix} — {pub.documentalTitulo}
+              </a>
+            )}
+          </div>
+          </div>{/* data-accordion-inner */}
+        </div>
+      </div>
+    );
+  })}
+</div>
+
+<style>
+  [data-accordion-active="false"] [data-accordion-trigger] .accordion-title {
+    -webkit-text-stroke: 1px var(--color-c1);
+    color: transparent;
+    transition: -webkit-text-stroke 0.3s, color 0.3s, opacity 0.2s;
+  }
+  [data-accordion-active="true"] [data-accordion-trigger] .accordion-title {
+    color: var(--color-c1);
+    -webkit-text-stroke: 0px transparent;
+    transition: -webkit-text-stroke 0.3s, color 0.3s, opacity 0.2s;
+  }
+  [data-accordion-active="false"] [data-accordion-trigger] {
+    cursor: pointer;
+  }
+  [data-accordion-active="false"] [data-accordion-trigger]:hover .accordion-title {
+    color: var(--color-c1);
+  }
+</style>
+
+<script>
+  import { gsap } from "gsap";
+
+  function initAccordion() {
+    const items = document.querySelectorAll<HTMLElement>("[data-accordion-item]");
+
+    // Set initial heights
+    items.forEach((item) => {
+      const panel = item.querySelector<HTMLElement>("[data-accordion-panel]");
+      const inner = item.querySelector<HTMLElement>("[data-accordion-inner]");
+      if (!panel || !inner) return;
+
+      if (item.dataset.accordionActive === "true") {
+        panel.style.height = inner.scrollHeight + "px";
+      } else {
+        panel.style.height = "0";
+      }
+    });
+
+    items.forEach((item) => {
+      const trigger = item.querySelector<HTMLButtonElement>("[data-accordion-trigger]");
+      const id = item.dataset.accordionItem;
+
+      trigger?.addEventListener("click", () => {
+        // Skip if already active
+        if (item.dataset.accordionActive === "true") return;
+
+        // 1. Collapse all
+        items.forEach((otherItem) => {
+          otherItem.dataset.accordionActive = "false";
+          const panel = otherItem.querySelector<HTMLElement>("[data-accordion-panel]");
+          const otherTrigger = otherItem.querySelector<HTMLButtonElement>("[data-accordion-trigger]");
+          if (panel) gsap.to(panel, { height: 0, duration: 0.5, ease: "power2.in" });
+          otherTrigger?.setAttribute("aria-expanded", "false");
+        });
+
+        // 2. Expand selected
+        item.dataset.accordionActive = "true";
+        const panel = item.querySelector<HTMLElement>("[data-accordion-panel]");
+        const inner = item.querySelector<HTMLElement>("[data-accordion-inner]");
+        trigger.setAttribute("aria-expanded", "true");
+        if (panel && inner) {
+          gsap.to(panel, { height: inner.scrollHeight, duration: 0.5, ease: "power2.out" });
+        }
+
+        // Notify viewer
+        document.dispatchEvent(
+          new CustomEvent("publicacion:select", { detail: { id } })
+        );
+      });
+    });
+
+    // Sincronización inicial
+    const firstItem = items[0];
+    if (firstItem?.dataset.accordionItem) {
+      document.dispatchEvent(
+        new CustomEvent("publicacion:select", {
+          detail: { id: firstItem.dataset.accordionItem },
+        })
+      );
+    }
+  }
+
+  document.addEventListener("astro:page-load", initAccordion);
+</script>

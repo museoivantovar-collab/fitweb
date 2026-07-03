@@ -1,0 +1,222 @@
+---
+import type { Locale } from "@/lib/i18n";
+import { fetchCollection, getMediaUrl } from "@/lib/cms";
+import type { Miembro } from "@fundacion/types";
+import { useAboutTranslations } from "./about-foundation.i18n";
+
+interface Props {
+  lang: Locale;
+}
+
+const { lang } = Astro.props;
+const t = useAboutTranslations(lang);
+
+const { docs: members } = await fetchCollection<Miembro>("miembros", lang, {
+  sort: "orden",
+  limit: "50",
+});
+
+function extractBioText(bio: unknown): string[] {
+  if (!bio || typeof bio !== "object") return [];
+  const root = (bio as Record<string, unknown>).root;
+  if (!root || typeof root !== "object") return [];
+
+  const paragraphs: string[] = [];
+
+  function collectText(node: unknown): string {
+    if (!node || typeof node !== "object") return "";
+    const n = node as Record<string, unknown>;
+    if (n.type === "text" && typeof n.text === "string") return n.text;
+    if (Array.isArray(n.children)) {
+      return (n.children as unknown[]).map(collectText).join("");
+    }
+    return "";
+  }
+
+  const rootNode = root as Record<string, unknown>;
+  if (Array.isArray(rootNode.children)) {
+    for (const child of rootNode.children as unknown[]) {
+      const text = collectText(child).trim();
+      if (text) paragraphs.push(text);
+    }
+  }
+
+  return paragraphs;
+}
+---
+
+<section class="w-full bg-c8 py-16 md:py-24">
+
+  <div class="relative">
+    <!-- Embla viewport -->
+    <div id="embla" class="overflow-hidden select-none cursor-grab">
+      <div id="embla-container" class="flex">
+        <article class="embla__slide js-bookend-slide shrink-0">
+          <svg class="block h-full w-full" viewBox="0 0 324 786" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M281 50L324 0V786L281 736V50Z" fill="#9D9A00"/>
+            <ellipse cx="301.5" cy="583" rx="36" ry="11.5" transform="rotate(90 301.5 583)" fill="#09150D"/>
+            <ellipse cx="311" cy="582.5" rx="16.5" ry="2" transform="rotate(90 311 582.5)" fill="#00A7BA"/>
+            <rect x="311" y="566" width="33" height="343" transform="rotate(90 311 566)" fill="#00A7BA"/>
+          </svg>
+        </article>
+        {members.map((member) => {
+          const bioParagraphs = extractBioText(member.bio);
+          const hasBio = bioParagraphs.length > 0;
+          return (
+            <article class="embla__slide flex flex-col flex-[0_0_80%] sm:flex-[0_0_40%] lg:flex-[0_0_25%] shrink-0 bg-c1 p-4 sm:p-8 lg:p-16 justify-center">
+              <!-- Portrait + overlay wrapper -->
+              <div class="relative aspect-3/4 w-full overflow-hidden">
+                <!-- Portrait -->
+                {typeof member.foto === "object" && getMediaUrl(member.foto?.url) ? (
+                  <img
+                    src={getMediaUrl(member.foto?.url)!}
+                    alt={member.nombre}
+                    class="absolute inset-0 w-full h-full object-cover object-top grayscale"
+                  />
+                ) : (
+                  <div class="absolute inset-0 w-full h-full bg-c8" />
+                )}
+
+                <!-- Overlay: bar pinned at bottom, bio grows upward -->
+                <div class="absolute bottom-0 left-0 right-0 z-10 flex flex-col">
+                  <!-- Bar -->
+                  <div class={`flex flex-row justify-between items-end p-4 bg-c7${hasBio ? " cursor-pointer js-member-toggle" : ""}`}>
+                    <div>
+                      <p class="font-bold text-c1 text-base leading-tight">{member.nombre}</p>
+                      <p class="italic text-c2 text-sm mt-1">{member.cargo}</p>
+                    </div>
+                    <div class="w-8 h-8 bg-c2 shrink-0 flex items-center justify-center">
+                      {hasBio && (
+                        <svg class="js-chevron w-5 h-5 text-c1 transition-transform duration-300" style="transform: rotate(180deg)" viewBox="0 0 66 39" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M25.1128 0.0086628C24.7201 0.952188 21.3484 8.10221 15.7062 7.10675C12.3857 6.51813 12.4284 2.5536 12.454 1.21189C6.54708 0.908919 0 -2.97513e-06 0 -2.97513e-06L33 38.1565L66 0C66 0 59.4529 0.900265 53.546 1.21189C53.5717 2.54494 53.6143 6.51813 50.2853 7.10675C44.643 8.10221 41.2799 0.952189 40.8872 0.00866351L25.1128 0.0086628Z" fill="currentColor"/>
+                        </svg>
+                      )}
+                    </div>
+                  </div>
+
+                  <!-- Bio panel (grows upward over portrait) -->
+                  {hasBio && (
+                    <div class="overflow-hidden js-member-bio" style="max-height: 0;">
+                      <div class="overflow-y-auto max-h-72 px-4 py-12 bg-c7 border-t border-c8 text-c1 text-sm space-y-2 member-bio-scroll">
+                        {bioParagraphs.map((p) => <p>{p}</p>)}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </article>
+          );
+        })}
+        <article class="embla__slide js-bookend-slide shrink-0">
+          <svg class="block h-full w-full" viewBox="0 0 324 786" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <g transform="scale(-1,1) translate(-324,0)">
+              <path d="M281 50L324 0V786L281 736V50Z" fill="#9D9A00"/>
+              <ellipse cx="301.5" cy="583" rx="36" ry="11.5" transform="rotate(90 301.5 583)" fill="#09150D"/>
+              <ellipse cx="311" cy="582.5" rx="16.5" ry="2" transform="rotate(90 311 582.5)" fill="#00A7BA"/>
+              <rect x="311" y="566" width="33" height="343" transform="rotate(90 311 566)" fill="#00A7BA"/>
+            </g>
+          </svg>
+        </article>
+      </div>
+    </div>
+  </div>
+
+  <!-- Arrows -->
+  <div class="flex justify-center lg:justify-between px-10 lg:px-16 mt-6">
+    <button
+      id="members-prev"
+      aria-label="Anterior"
+      class="w-10 h-10 bg-c2 text-c1 flex items-center justify-center transition-all cursor-pointer group/btn"
+    >
+      <img src="/icons/chevron_left.svg" alt="" aria-hidden="true" class="w-5 h-5 transition-transform duration-200 group-hover/btn:scale-110" />
+    </button>
+    <button
+      id="members-next"
+      aria-label="Siguiente"
+      class="w-10 h-10 bg-c2 text-c1 flex items-center justify-center transition-all cursor-pointer group/btn"
+    >
+      <img src="/icons/chevron_right.svg" alt="" aria-hidden="true" class="w-5 h-5 transition-transform duration-200 group-hover/btn:scale-110" />
+    </button>
+  </div>
+</section>
+
+<style>
+  .member-bio-scroll::-webkit-scrollbar {
+    width: var(--sb-size);
+  }
+  .member-bio-scroll::-webkit-scrollbar-track {
+    background: var(--sb-track-color);
+    border-radius: 6px;
+  }
+  .member-bio-scroll::-webkit-scrollbar-thumb {
+    background: var(--sb-thumb-color);
+    border-radius: 6px;
+  }
+  @supports not selector(::-webkit-scrollbar) {
+    .member-bio-scroll {
+      scrollbar-color: var(--sb-thumb-color) var(--sb-track-color);
+    }
+  }
+</style>
+
+<script>
+  import EmblaCarousel from "embla-carousel";
+  import { gsap } from "gsap";
+
+  document.addEventListener("astro:page-load", () => {
+    const viewportEl = document.getElementById("embla") as HTMLElement;
+    if (!viewportEl) return;
+
+    const embla = EmblaCarousel(viewportEl, {
+      loop: true,
+      align: "start",
+      containScroll: "trimSnaps",
+    });
+
+    embla.on("pointerDown", () => viewportEl.classList.replace("cursor-grab", "cursor-grabbing"));
+    embla.on("pointerUp",   () => viewportEl.classList.replace("cursor-grabbing", "cursor-grab"));
+
+    document.getElementById("members-prev")?.addEventListener("click", () => embla.scrollPrev());
+    document.getElementById("members-next")?.addEventListener("click", () => embla.scrollNext());
+
+    const bookends = viewportEl.querySelectorAll<HTMLElement>(".js-bookend-slide");
+
+    function sizeBookends() {
+      const h = viewportEl.offsetHeight;
+      const w = Math.round(h * 324 / 786);
+      bookends.forEach((el) => { el.style.width = w + "px"; });
+      embla.reInit();
+    }
+
+    sizeBookends();
+    new ResizeObserver(sizeBookends).observe(viewportEl);
+
+    document.querySelectorAll<HTMLElement>(".js-member-toggle").forEach((toggle) => {
+      toggle.addEventListener("click", () => {
+        const article = toggle.closest("article");
+        if (!article) return;
+        const panel = article.querySelector<HTMLElement>(".js-member-bio");
+        const chevron = toggle.querySelector<HTMLElement>(".js-chevron");
+        if (!panel) return;
+        const isOpen = panel.dataset.open === "true";
+        if (isOpen) {
+          panel.style.overflow = "hidden";
+          gsap.to(panel, {
+            maxHeight: 0,
+            duration: 0.35,
+            ease: "power2.in",
+            onComplete: () => { panel.dataset.open = "false"; },
+          });
+        } else {
+          gsap.to(panel, {
+            maxHeight: "18rem",
+            duration: 0.4,
+            ease: "power2.out",
+            onComplete: () => { panel.dataset.open = "true"; },
+          });
+        }
+        if (chevron) chevron.style.transform = isOpen ? "rotate(180deg)" : "";
+      });
+    });
+  });
+</script>

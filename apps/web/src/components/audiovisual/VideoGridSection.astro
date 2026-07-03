@@ -1,0 +1,125 @@
+---
+import type { Locale } from "@/lib/i18n";
+import { useAudiovisualTranslations } from "./audiovisual.i18n";
+import VideoThumbnail from "./VideoThumbnail.astro";
+
+interface Props {
+  lang: Locale;
+  videos: { youtubeId: string; titulo: string }[];
+}
+
+const { lang, videos } = Astro.props;
+const t = useAudiovisualTranslations(lang);
+---
+
+<section style="padding-inline: 5vw;" class="pt-16 pb-20 bg-c1 text-c7">
+
+  <h1 class="text-5xl md:text-6xl lg:text-7xl font-black mb-10">
+    {t.videoGrid.title}
+  </h1>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    {videos.map((video) => (
+      <div
+        data-yt-id={video.youtubeId}
+        class="video-item h-full cursor-pointer"
+      >
+        <VideoThumbnail
+          youtubeId={video.youtubeId}
+          titulo={video.titulo}
+          playLabel={t.videoGrid.playLabel}
+        />
+      </div>
+    ))}
+  </div>
+</section>
+
+<!-- Lightbox overlay (desktop/tablet) -->
+<div
+  id="vg-overlay"
+  aria-label={t.videoGrid.closeLabel}
+  role="dialog"
+  style="background-color: color-mix(in srgb, var(--color-c1) 70%, transparent);"
+  class="hidden fixed inset-0 z-50 items-center justify-center p-4 md:p-16 cursor-pointer"
+>
+  <div
+    id="vg-player"
+    style="width: min(calc(60svh * 16 / 9), 90vw); aspect-ratio: 16 / 9;"
+    class="relative cursor-default"
+  >
+    <!-- iframe injected by JS -->
+  </div>
+</div>
+
+<script>
+  document.addEventListener("astro:page-load", () => {
+    const overlay = document.getElementById("vg-overlay")!;
+    const player = document.getElementById("vg-player")!;
+    const items = document.querySelectorAll<HTMLElement>(".video-item");
+
+    if (!overlay || !player) return;
+
+    function isMobile() {
+      return window.matchMedia("(max-width: 767px)").matches;
+    }
+
+    function buildIframe(ytId: string) {
+      const iframe = document.createElement("iframe");
+      iframe.src = `https://www.youtube.com/embed/${ytId}?autoplay=1`;
+      iframe.allow =
+        "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
+      iframe.setAttribute("allowfullscreen", "");
+      iframe.className = "absolute inset-0 w-full h-full border-0";
+      return iframe;
+    }
+
+    function closeOverlay() {
+      player.innerHTML = "";
+      overlay.style.display = "none";
+    }
+
+    function clearMobileIframes() {
+      items.forEach((item) => {
+        item.querySelector("iframe")?.remove();
+      });
+    }
+
+    items.forEach((item) => {
+      item.addEventListener("click", () => {
+        const ytId = item.dataset.ytId;
+        if (!ytId) return;
+
+        if (isMobile()) {
+          // ── Mobile: inline play, one at a time ──
+          const alreadyPlaying = item.querySelector("iframe");
+          clearMobileIframes();
+          if (!alreadyPlaying) {
+            item.appendChild(buildIframe(ytId));
+          }
+        } else {
+          // ── Desktop/tablet: lightbox ──
+          player.innerHTML = "";
+          player.appendChild(buildIframe(ytId));
+          overlay.style.display = "flex";
+        }
+      });
+    });
+
+    // Close lightbox by clicking the backdrop
+    overlay.addEventListener("click", closeOverlay);
+
+    // Prevent clicks inside the player from closing the overlay
+    player.addEventListener("click", (e) => e.stopPropagation());
+
+    // Close on Escape
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") closeOverlay();
+    });
+
+    // Clean up on Astro page transitions
+    document.addEventListener("astro:before-swap", () => {
+      closeOverlay();
+      clearMobileIframes();
+    });
+  });
+</script>

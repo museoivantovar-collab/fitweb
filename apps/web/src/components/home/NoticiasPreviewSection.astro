@@ -1,0 +1,154 @@
+---
+import type { Locale } from "@/lib/i18n";
+import { useHomeTranslations } from "./home.i18n";
+import { fetchCollection } from "@/lib/cms";
+import type { Noticia } from "@fundacion/types";
+import NewsThumbnail from "@/components/noticias/NewsThumbnail.astro";
+
+interface Props {
+  lang: Locale;
+}
+
+const { lang } = Astro.props;
+const t = useHomeTranslations(lang);
+
+const { docs: noticias } = await fetchCollection<Noticia>("noticias", lang, {
+  sort: "-fecha",
+  limit: "3",
+});
+---
+
+<section class="w-full bg-c1 py-36 overflow-hidden">
+
+  <!-- Single scrollable carousel track -->
+  <div
+    id="noticias-carousel-track"
+    class="noticias-track flex items-stretch overflow-x-scroll cursor-grab active:cursor-grabbing select-none"
+  >
+    <!-- Slide 0: title + CTA -->
+    <div class="shrink-0 w-[82%] md:w-[80vw] lg:w-[40%] flex flex-col justify-center gap-8 px-10 lg:px-16 py-16 lg:py-24">
+      <h2 class="text-c6 font-black text-[32px] sm:text-4xl lg:text-5xl leading-tight">
+        {t.noticiasPreview.title}
+      </h2>
+      <a
+        href={`/${lang}/noticias`}
+        class="group inline-flex items-stretch self-start font-normal text-[14px] sm:text-base h-10"
+      >
+        <span class="px-5 flex items-center border border-c3 text-c7 transition-colors duration-300 group-hover:bg-c3 group-hover:border-c3 group-hover:text-c1">{t.noticiasPreview.blogButton}</span>
+        <svg class="block h-full w-auto" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M49.9924 25L33.486 35.6178C33.486 35.6178 33.2341 27.9696 22.9348 29.3619C11.9408 30.8497 14.2541 50 14.2541 50H0V0H14.2617C14.2617 0 11.9408 19.1563 22.9424 20.6381C33.2417 22.0304 33.4937 14.3822 33.4937 14.3822L50 25H49.9924Z" class="fill-c3 transition-colors duration-300 group-hover:fill-c3"/>
+        </svg>
+      </a>
+    </div>
+
+    <!-- Tridimensional indicator -->
+    <svg id="tridimensional_indicator" class="shrink-0 self-stretch" width="24" viewBox="0 0 58 733" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M0 48.5556C0 47.9737 0.253406 47.4207 0.694121 47.0408L54.6941 0.489061C55.9903 -0.628361 58 0.292505 58 2.00388V730.274C58 731.986 55.9903 732.907 54.6941 731.789L0.694124 685.238C0.253409 684.858 0 684.305 0 683.723V48.5556Z" class="fill-c2"/>
+    </svg>
+
+    <!-- News thumbnail slides -->
+    {noticias.map((noticia) => (
+      <div class="shrink-0 w-[82%] lg:w-[46%] bg-c3 py-12 px-12">
+        <NewsThumbnail lang={lang} noticia={noticia} />
+      </div>
+    ))}
+  </div>
+
+  <!-- Arrows -->
+  <div class="flex justify-center lg:justify-between px-10 lg:px-16 mt-6">
+    <button
+      id="noticias-prev"
+      aria-label="Anterior"
+      class="w-10 h-10 bg-c2 text-c1 flex items-center justify-center transition-all cursor-pointer group/btn opacity-40"
+    >
+      <img src="/icons/chevron_left.svg" alt="" aria-hidden="true" class="w-5 h-5 transition-transform duration-200 group-hover/btn:scale-110" />
+    </button>
+    <button
+      id="noticias-next"
+      aria-label="Siguiente"
+      class="w-10 h-10 bg-c2 text-c1 flex items-center justify-center transition-all cursor-pointer group/btn"
+    >
+      <img src="/icons/chevron_right.svg" alt="" aria-hidden="true" class="w-5 h-5 transition-transform duration-200 group-hover/btn:scale-110" />
+    </button>
+  </div>
+
+</section>
+
+<style>
+  .noticias-track {
+    scrollbar-width: none;
+  }
+  .noticias-track::-webkit-scrollbar {
+    display: none;
+  }
+</style>
+
+<script>
+  document.addEventListener("astro:page-load", () => {
+    const track = document.getElementById("noticias-carousel-track") as HTMLElement | null;
+    if (!track) return;
+
+    const controller = new AbortController();
+    const { signal } = controller;
+    document.addEventListener("astro:before-swap", () => controller.abort(), { once: true });
+
+    // Drag to scroll (mouse)
+    let isDragging = false;
+    let startX = 0;
+    let startScroll = 0;
+
+    track.addEventListener("mousedown", (e) => {
+      isDragging = true;
+      startX = e.pageX;
+      startScroll = track.scrollLeft;
+    }, { signal });
+
+    window.addEventListener("mousemove", (e) => {
+      if (!isDragging) return;
+      track.scrollLeft = startScroll - (e.pageX - startX);
+    }, { signal });
+
+    window.addEventListener("mouseup", () => {
+      isDragging = false;
+    }, { signal });
+
+    // Touch swipe
+    let touchStartX = 0;
+    let touchStartScroll = 0;
+
+    track.addEventListener("touchstart", (e) => {
+      touchStartX = e.touches[0].clientX;
+      touchStartScroll = track.scrollLeft;
+    }, { passive: true, signal });
+
+    track.addEventListener("touchmove", (e) => {
+      track.scrollLeft = touchStartScroll - (e.touches[0].clientX - touchStartX);
+    }, { passive: true, signal });
+
+    // Prev / next arrow buttons
+    const prev = document.getElementById("noticias-prev");
+    const next = document.getElementById("noticias-next");
+
+    function slideWidth() {
+      const slide = track.children.item(2) as HTMLElement | null;
+      return slide ? slide.offsetWidth : track.clientWidth * 0.82;
+    }
+
+    function updateArrows() {
+      const atStart = track!.scrollLeft <= 0;
+      const atEnd = track!.scrollLeft + track!.clientWidth >= track!.scrollWidth - 1;
+      prev?.classList.toggle("opacity-40", atStart);
+      next?.classList.toggle("opacity-40", atEnd);
+    }
+
+    track.addEventListener("scroll", updateArrows, { passive: true, signal });
+
+    prev?.addEventListener("click", () => {
+      track.scrollBy({ left: -slideWidth(), behavior: "smooth" });
+    }, { signal });
+
+    next?.addEventListener("click", () => {
+      track.scrollBy({ left: slideWidth(), behavior: "smooth" });
+    }, { signal });
+  });
+</script>

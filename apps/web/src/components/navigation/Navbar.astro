@@ -1,0 +1,203 @@
+---
+import type { Locale } from "@/lib/i18n";
+import { useNavTranslations } from "./navigation.i18n";
+
+interface Props {
+  lang: Locale;
+}
+
+const { lang } = Astro.props;
+const t = useNavTranslations(lang);
+const n = t.nav;
+
+const localeLabels: Record<Locale, string> = { es: "ES", en: "EN", fr: "FR" };
+const currentPath = Astro.url.pathname;
+const localePath = (l: Locale) => currentPath.replace(new RegExp(`^/${lang}`), `/${l}`);
+
+const seg = currentPath.replace(new RegExp(`^/${lang}`), '') || '/';
+const isHome           = seg === '/' || seg === '';
+const isSobre          = seg.startsWith('/sobre-');
+const isQueHacemos     = seg.startsWith('/conservamos') || seg.startsWith('/exponemos') || seg.startsWith('/publicamos');
+const isNoticias       = seg.startsWith('/noticias');
+const isArchivoDigital = seg.startsWith('/audiovisuales') || seg.startsWith('/galeria');
+
+const active   = 'text-c2';
+const inactive = 'text-white hover:text-c2';
+---
+
+<header data-navbar class="fixed top-0 left-1/2 -translate-x-1/2 z-50 bg-c1 flex items-stretch w-fit transition-transform duration-700" style="height:64px;">
+
+  <!-- Logo -->
+  <a href={`/${lang}/`} class="flex items-center px-6 shrink-0" aria-label="Inicio">
+    <img src="/assets/navbar/logo.svg" alt="FIT" class="h-10 w-auto" />
+  </a>
+
+  <!-- Gap between logo and links -->
+  <div class="shrink-0" style="width:36px;"></div>
+
+  <!-- Nav links -->
+  <div class="flex items-stretch">
+
+    <!-- Inicio -->
+    <a
+      href={`/${lang}/`}
+      class={`flex items-center px-3 text-sm transition-colors whitespace-nowrap ${isHome ? active : inactive}`}
+    >
+      {n.home}
+    </a>
+
+    <!-- Sobre ▼ -->
+    <div class="group relative flex items-stretch">
+      <button
+        class={`flex items-center gap-1 px-3 text-sm transition-colors whitespace-nowrap cursor-pointer ${isSobre ? active : inactive}`}
+        aria-haspopup="true"
+      >
+        {n.sobre}
+        <svg class="w-3 h-3 transition-transform duration-300 group-hover:rotate-180" viewBox="0 0 34 20" fill="currentColor" aria-hidden="true">
+          <path d="M12.8721 0.00434855C12.6709 0.477851 10.9426 4.06605 8.05054 3.56648C6.34855 3.27108 6.37043 1.28151 6.38355 0.608179C3.35584 0.456137 -1.96221e-05 4.03417e-07 -1.96221e-05 4.03417e-07L16.9149 19.1486L33.8298 0C33.8298 0 30.474 0.451792 27.4463 0.608178C27.4594 1.27716 27.4813 3.27108 25.7749 3.56648C22.8828 4.06605 21.159 0.47785 20.9577 0.00434845L12.8721 0.00434855Z"/>
+        </svg>
+      </button>
+      <div class="absolute top-full left-0 hidden group-hover:block bg-c1 min-w-40 py-2 shadow-lg">
+        <a href={`/${lang}/sobre-tovar`} class={`block px-4 py-2 text-sm transition-colors whitespace-nowrap ${seg.startsWith('/sobre-tovar') ? active : inactive}`}>
+          {n.sobreDropdown.ivanTovar}
+        </a>
+        <a href={`/${lang}/sobre-fundacion`} class={`block px-4 py-2 text-sm transition-colors whitespace-nowrap ${seg.startsWith('/sobre-fundacion') ? active : inactive}`}>
+          {n.sobreDropdown.laFundacion}
+        </a>
+      </div>
+    </div>
+
+    <!-- Qué hacemos ▼ -->
+    <div class="group relative flex items-stretch">
+      <button
+        class={`flex items-center gap-1 px-3 text-sm transition-colors whitespace-nowrap cursor-pointer ${isQueHacemos ? active : inactive}`}
+        aria-haspopup="true"
+      >
+        {n.queHacemos}
+        <svg class="w-3 h-3 transition-transform duration-300 group-hover:rotate-180" viewBox="0 0 34 20" fill="currentColor" aria-hidden="true">
+          <path d="M12.8721 0.00434855C12.6709 0.477851 10.9426 4.06605 8.05054 3.56648C6.34855 3.27108 6.37043 1.28151 6.38355 0.608179C3.35584 0.456137 -1.96221e-05 4.03417e-07 -1.96221e-05 4.03417e-07L16.9149 19.1486L33.8298 0C33.8298 0 30.474 0.451792 27.4463 0.608178C27.4594 1.27716 27.4813 3.27108 25.7749 3.56648C22.8828 4.06605 21.159 0.47785 20.9577 0.00434845L12.8721 0.00434855Z"/>
+        </svg>
+      </button>
+      <div class="absolute top-full left-0 hidden group-hover:block bg-c1 min-w-40 py-2 shadow-lg">
+        <a href={`/${lang}/conservamos`} class={`block px-4 py-2 text-sm transition-colors whitespace-nowrap ${seg.startsWith('/conservamos') ? active : inactive}`}>
+          {n.queHacemosDropdown.conservamos}
+        </a>
+        <a href={`/${lang}/exponemos`} class={`block px-4 py-2 text-sm transition-colors whitespace-nowrap ${seg.startsWith('/exponemos') ? active : inactive}`}>
+          {n.queHacemosDropdown.exponemos}
+        </a>
+        <a href={`/${lang}/publicamos`} class={`block px-4 py-2 text-sm transition-colors whitespace-nowrap ${seg.startsWith('/publicamos') ? active : inactive}`}>
+          {n.queHacemosDropdown.publicamos}
+        </a>
+      </div>
+    </div>
+
+    <!-- Noticias -->
+    <a
+      href={`/${lang}/noticias`}
+      class={`flex items-center px-3 text-sm transition-colors whitespace-nowrap ${isNoticias ? active : inactive}`}
+    >
+      {n.noticias}
+    </a>
+
+    <!-- Archivo digital ▼ -->
+    <div class="group relative flex items-stretch">
+      <button
+        class={`flex items-center gap-1 px-3 text-sm transition-colors whitespace-nowrap cursor-pointer ${isArchivoDigital ? active : inactive}`}
+        aria-haspopup="true"
+      >
+        {n.archivoDigital}
+        <svg class="w-3 h-3 transition-transform duration-300 group-hover:rotate-180" viewBox="0 0 34 20" fill="currentColor" aria-hidden="true">
+          <path d="M12.8721 0.00434855C12.6709 0.477851 10.9426 4.06605 8.05054 3.56648C6.34855 3.27108 6.37043 1.28151 6.38355 0.608179C3.35584 0.456137 -1.96221e-05 4.03417e-07 -1.96221e-05 4.03417e-07L16.9149 19.1486L33.8298 0C33.8298 0 30.474 0.451792 27.4463 0.608178C27.4594 1.27716 27.4813 3.27108 25.7749 3.56648C22.8828 4.06605 21.159 0.47785 20.9577 0.00434845L12.8721 0.00434855Z"/>
+        </svg>
+      </button>
+      <div class="absolute top-full left-0 hidden group-hover:block bg-c1 min-w-40 py-2 shadow-lg">
+        <a href={`/${lang}/galeria`} class={`block px-4 py-2 text-sm transition-colors whitespace-nowrap ${seg.startsWith('/galeria') ? active : inactive}`}>
+          {n.archivoDropdown.obras}
+        </a>
+        <a href={`/${lang}/audiovisuales`} class={`block px-4 py-2 text-sm transition-colors whitespace-nowrap ${seg.startsWith('/audiovisuales') ? active : inactive}`}>
+          {n.archivoDropdown.audiovisuales}
+        </a>
+      </div>
+    </div>
+
+    <!-- Tienda -->
+    <a
+      href="https://fundacion-ivan-tovar.myshopify.com"
+      target="_blank"
+      rel="noopener noreferrer"
+      class={`flex items-center px-3 text-sm transition-colors whitespace-nowrap ${inactive}`}
+    >
+      {n.tienda}<svg class="inline-block w-[0.6em] h-auto relative -top-[0.4em] rotate-45 shrink-0 text-c7" viewBox="0 0 34 20" fill="none" aria-hidden="true"><path d="M20.9577 19.1442C21.159 18.6707 22.8872 15.0825 25.7793 15.5821C27.4813 15.8775 27.4594 17.8671 27.4463 18.5404C30.474 18.6925 33.8299 19.1486 33.8299 19.1486L16.9149 -1.18237e-05L0 19.1486C0 19.1486 3.35586 18.6968 6.38357 18.5404C6.37044 17.8714 6.34857 15.8775 8.05493 15.5821C10.947 15.0825 12.6709 18.6707 12.8721 19.1442L20.9577 19.1442Z" fill="currentColor"/></svg>
+    </a>
+
+  </div>
+
+  <!-- Gap between nav links and right group -->
+  <div class="shrink-0" style="width:36px;"></div>
+
+  <!-- Right group: language toggle + Contacto -->
+  <div class="flex items-stretch gap-4">
+
+    <!-- Language selector -->
+    <div class="flex items-center self-center w-fit px-4 py-3 gap-2 bg-c8">
+      {(["es", "en", "fr"] as Locale[]).map((l) => (
+        <a
+          href={localePath(l)}
+          class={`flex items-center text-sm transition-colors p-1 ${l === lang ? 'bg-c2 text-c1 pointer-events-none' : 'text-white hover:bg-c2/50'}`}
+          aria-current={l === lang ? "true" : undefined}
+        >
+          {localeLabels[l]}
+        </a>
+      ))}
+    </div>
+
+    <!-- Contacto -->
+    <a
+      href={`/${lang}/contacto`}
+      class={`flex items-center bg-c4 p-4 text-sm transition-colors whitespace-nowrap text-c1 hover:text-c1`}
+    >
+      {n.contacto}
+    </a>
+
+  </div>
+
+</header>
+
+<script>
+  function initNavbar() {
+    const maybeHeader = document.querySelector<HTMLElement>('header[data-navbar]');
+    if (!maybeHeader) return;
+    const header: HTMLElement = maybeHeader;
+
+    const THRESHOLD = 100;
+    let lastY = window.scrollY;
+    let ticking = false;
+
+    function onScroll() {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const currentY = window.scrollY;
+          if (currentY > THRESHOLD) {
+            if (currentY > lastY) {
+              header.classList.add('-translate-y-full');
+            } else {
+              header.classList.remove('-translate-y-full');
+            }
+          } else {
+            header.classList.remove('-translate-y-full');
+          }
+          lastY = currentY;
+          ticking = false;
+        });
+        ticking = true;
+      }
+    }
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    document.addEventListener('astro:before-swap', () => {
+      window.removeEventListener('scroll', onScroll);
+    }, { once: true });
+  }
+
+  document.addEventListener('astro:page-load', initNavbar);
+</script>

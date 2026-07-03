@@ -1,0 +1,191 @@
+---
+import type { Locale } from "@/lib/i18n";
+import { useGaleriaTranslations } from "./galeria.i18n";
+
+interface Props {
+  lang: Locale;
+}
+
+const { lang } = Astro.props;
+const t = useGaleriaTranslations(lang);
+
+// Editorial placeholders — replace with Payload CMS data when ready.
+const artworks = [
+  { id: 1,  name: "Composición en Rojo",      year: 1978, description: "Óleo sobre lienzo con texturas vibrantes.", aspect: "aspect-video",  bg: "bg-c2" },
+  { id: 2,  name: "Figura Abstracta",          year: 1982, description: "Técnica mixta sobre papel.",               aspect: "aspect-square", bg: "bg-c4" },
+  { id: 3,  name: "Horizonte Tropical",        year: 1985, description: "Acrílico sobre tela, gran formato.",       aspect: "aspect-video",  bg: "bg-c3" },
+  { id: 4,  name: "Danza de Formas",           year: 1990, description: "Collage y pintura al óleo.",               aspect: "aspect-square", bg: "bg-c5" },
+  { id: 5,  name: "El Jardín Interior",        year: 1993, description: "Óleo sobre madera encolada.",              aspect: "aspect-square", bg: "bg-c6" },
+  { id: 6,  name: "Sombras del Trópico",       year: 1996, description: "Aguada y pastel sobre cartulina.",         aspect: "aspect-video",  bg: "bg-c4" },
+  { id: 7,  name: "Fragmentos de Luz",         year: 1999, description: "Acrílico y resina sobre lienzo.",          aspect: "aspect-square", bg: "bg-c2" },
+  { id: 8,  name: "Arquitectura del Sueño",    year: 2002, description: "Óleo sobre tela con pigmentos naturales.", aspect: "aspect-video",  bg: "bg-c3" },
+  { id: 9,  name: "Ritmo Caribeño",            year: 2006, description: "Técnica mixta, serie de gran formato.",    aspect: "aspect-video",  bg: "bg-c5" },
+  { id: 10, name: "Palimpsesto Verde",         year: 2010, description: "Capas de acrílico y óleo.",               aspect: "aspect-square", bg: "bg-c6" },
+  { id: 11, name: "Memoria del Agua",          year: 2014, description: "Acuarela y tinta sobre papel de algodón.", aspect: "aspect-video",  bg: "bg-c2" },
+  { id: 12, name: "El Tiempo de las Flores",  year: 2018, description: "Óleo sobre lienzo, última gran obra.",     aspect: "aspect-square", bg: "bg-c4" },
+];
+
+const cols = [artworks.slice(0, 4), artworks.slice(4, 8), artworks.slice(8, 12)];
+---
+
+<section style="padding-inline: 5vw;" class="pt-16 pb-20 bg-c1 text-c7">
+
+  <h1 class="text-5xl md:text-6xl lg:text-7xl font-black mb-10">
+    {t.grid.title}
+  </h1>
+
+  <!-- 3 cols desktop, 2 tablet, 1 mobile — each column is an independent flex stack -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+    {cols.map((col) => (
+      <div class="flex flex-col gap-8">
+        {col.map((work) => (
+          <button
+            class="gallery-item group relative overflow-hidden cursor-pointer text-left focus-visible:outline-2 focus-visible:outline-c2 focus-visible:outline-offset-2"
+            data-id={work.id}
+            data-name={work.name}
+            data-year={work.year}
+            data-desc={work.description}
+            data-bg={work.bg}
+            data-aspect={work.aspect}
+            aria-label={`${t.grid.expandLabel}: ${work.name}`}
+            type="button"
+          >
+            <div
+              class={`w-full flex items-center justify-center transition-transform duration-300 group-hover:scale-[1.02] ${work.aspect} ${work.bg}`}
+            >
+              <!-- Placeholder art-frame icon -->
+              <svg
+                viewBox="0 0 64 64"
+                class="w-12 h-12 opacity-30 text-c7"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                aria-hidden="true"
+              >
+                <rect x="8" y="8" width="48" height="48" rx="2" />
+                <rect x="16" y="16" width="32" height="32" rx="1" />
+                <circle cx="24" cy="24" r="4" />
+                <path d="M16 48 L28 32 L36 40 L44 28 L48 36" stroke-linejoin="round" stroke-linecap="round" />
+              </svg>
+            </div>
+            <!-- Item caption bar -->
+            <div class="absolute bottom-0 left-0 right-0 px-4 py-3 bg-linear-to-t from-c8/80 to-transparent translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+              <p class="text-sm font-semibold text-c7 leading-tight">{work.name}</p>
+              <p class="text-xs text-c7/70">{work.year}</p>
+            </div>
+          </button>
+        ))}
+      </div>
+    ))}
+  </div>
+</section>
+
+<!-- Lightbox overlay — clicking the backdrop closes it -->
+<div
+  id="gl-overlay"
+  role="dialog"
+  aria-modal="true"
+  aria-label={t.grid.expandLabel}
+  class="hidden fixed inset-0 z-50 items-center justify-center bg-c8/75 cursor-pointer"
+>
+  <!-- Close button -->
+  <button
+    id="gl-close"
+    type="button"
+    aria-label={t.grid.closeLabel}
+    class="fixed top-6 right-6 z-10 text-c7 hover:text-c2 transition-colors cursor-pointer"
+  >
+    <svg width="28" height="28" viewBox="0 0 31 35" fill="currentColor" aria-hidden="true">
+      <path d="M30.4866 27.4332L19.7046 16.5737C22.3675 12.7103 25.7429 10.1551 26.9896 9.29315C27.0331 9.26252 27.0548 9.24502 27.0635 9.24064L27.0765 9.07001C27.0765 9.07001 25.1564 6.93923 24.3528 5.20661C23.5535 3.5265 23.4101 0.13126 23.4101 0.0962572L23.2363 0C23.2363 0 21.5074 1.05007 19.1269 3.52212C17.6586 5.0491 15.7211 7.35051 13.7185 10.5401L6.04692 2.81332L0 8.90374L9.4266 18.3982C6.15553 23.9417 1.76803 28.0632 1.7159 28.1113V28.282L8.00609 34.6218L8.16248 34.6305C8.21461 34.5868 12.7107 30.8853 15.7559 24.7773L24.444 33.528L30.4909 27.4375L30.4866 27.4332Z"/>
+    </svg>
+  </button>
+
+  <!-- Modal — stops click propagation so backdrop stays clickable -->
+  <div
+    id="gl-modal"
+    class="flex flex-col md:flex-row md:items-end gap-4 max-w-5xl w-[90vw] cursor-default"
+  >
+    <!-- Image placeholder -->
+    <div
+      id="gl-artwork"
+      class="flex-1 aspect-video flex items-center justify-center"
+    >
+      <svg
+        viewBox="0 0 64 64"
+        class="w-16 h-16 opacity-30 text-c7"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        aria-hidden="true"
+      >
+        <rect x="8" y="8" width="48" height="48" rx="2" />
+        <rect x="16" y="16" width="32" height="32" rx="1" />
+        <circle cx="24" cy="24" r="4" />
+        <path d="M16 48 L28 32 L36 40 L44 28 L48 36" stroke-linejoin="round" stroke-linecap="round" />
+      </svg>
+    </div>
+
+    <!-- Info card -->
+    <div
+      id="gl-card"
+      class="bg-c7 text-c1 p-8 shrink-0 md:w-72"
+    >
+      <p id="gl-year" class="text-xs font-semibold text-c1/50 mb-2 tracking-widest uppercase"></p>
+      <h2 id="gl-name" class="text-2xl font-black mb-3 leading-tight"></h2>
+      <p id="gl-desc" class="text-sm text-c1/70 leading-relaxed"></p>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener("astro:page-load", () => {
+    const overlay  = document.getElementById("gl-overlay")!;
+    const modal    = document.getElementById("gl-modal")!;
+    const artwork  = document.getElementById("gl-artwork")!;
+    const nameEl   = document.getElementById("gl-name")!;
+    const yearEl   = document.getElementById("gl-year")!;
+    const descEl   = document.getElementById("gl-desc")!;
+    const closeBtn = document.getElementById("gl-close")!;
+    const items    = document.querySelectorAll<HTMLElement>(".gallery-item");
+
+    if (!overlay) return;
+
+    function openLightbox(item: HTMLElement) {
+      const bg     = item.dataset.bg     ?? "bg-c3";
+      const aspect = item.dataset.aspect ?? "aspect-video";
+      artwork.className = `flex-1 ${aspect} flex items-center justify-center ${bg}`;
+
+      nameEl.textContent = item.dataset.name ?? "";
+      yearEl.textContent = item.dataset.year ?? "";
+      descEl.textContent = item.dataset.desc ?? "";
+
+      overlay.style.display = "flex";
+      document.body.style.overflow = "hidden";
+      closeBtn.focus();
+    }
+
+    function closeLightbox() {
+      overlay.style.display = "none";
+      document.body.style.overflow = "";
+    }
+
+    items.forEach((item) => {
+      item.addEventListener("click", () => openLightbox(item));
+    });
+
+    // Close via × button
+    closeBtn.addEventListener("click", closeLightbox);
+
+    // Close via backdrop — but not when clicking inside the modal
+    overlay.addEventListener("click", closeLightbox);
+    modal.addEventListener("click", (e) => e.stopPropagation());
+
+    // Close via Escape
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && overlay.style.display === "flex") closeLightbox();
+    });
+
+    // Clean up on Astro page transitions
+    document.addEventListener("astro:before-swap", closeLightbox);
+  });
+</script>

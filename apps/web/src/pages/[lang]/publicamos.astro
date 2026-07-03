@@ -1,0 +1,29 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { guardLocale, SUPPORTED_LOCALES, type Locale } from "../../lib/i18n";
+import { fetchCollection } from "../../lib/cms";
+import type { Publicacion } from "@fundacion/types";
+import PublicamosSection from "../../components/publicamos/PublicamosSection.astro";
+import { usePublicamosTranslations } from "../../components/publicamos/publicamos.i18n";
+
+export function getStaticPaths() {
+  return SUPPORTED_LOCALES.map((lang) => ({ params: { lang } }));
+}
+
+const { lang } = Astro.params as { lang: string };
+const invalid = guardLocale(lang);
+if (invalid) return invalid;
+
+const locale = lang as Locale;
+const t = usePublicamosTranslations(locale);
+
+const { docs: publicaciones } = await fetchCollection<Publicacion>(
+  "publicaciones",
+  locale,
+  { sort: "orden", limit: "50" }
+);
+---
+
+<BaseLayout lang={locale} title={t.pageTitle}>
+  <PublicamosSection lang={locale} publicaciones={publicaciones} />
+</BaseLayout>

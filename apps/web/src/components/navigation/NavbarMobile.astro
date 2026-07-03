@@ -1,0 +1,262 @@
+---
+import type { Locale } from "@/lib/i18n";
+import { useNavTranslations } from "./navigation.i18n";
+
+interface Props {
+  lang: Locale;
+}
+
+const { lang } = Astro.props;
+const t = useNavTranslations(lang);
+const n = t.nav;
+
+const localeLabels: Record<Locale, string> = { es: "ES", en: "EN", fr: "FR" };
+const currentPath = Astro.url.pathname;
+const localePath = (l: Locale) => currentPath.replace(new RegExp(`^/${lang}`), `/${l}`);
+
+const seg = currentPath.replace(new RegExp(`^/${lang}`), '') || '/';
+const isHome           = seg === '/' || seg === '';
+const isSobre          = seg.startsWith('/sobre-');
+const isQueHacemos     = seg.startsWith('/conservamos') || seg.startsWith('/exponemos') || seg.startsWith('/publicamos');
+const isNoticias       = seg.startsWith('/noticias');
+const isArchivoDigital = seg.startsWith('/audiovisuales') || seg.startsWith('/galeria');
+
+const active   = 'text-c2';
+const inactive = 'text-white';
+---
+
+<!-- Burger button -->
+<button
+  id="nav-burger"
+  class="fixed top-6 right-0 z-50 w-[30vw] sm:w-[20vw] flex items-center justify-center"
+  aria-label="Abrir menú"
+  aria-expanded="false"
+>
+  <img src="/assets/burger.svg" alt="" aria-hidden="true" class="w-full h-full object-contain" />
+</button>
+
+<!-- Overlay (tablet: click outside to close) -->
+<div
+  id="nav-overlay"
+  class="fixed inset-0 z-40 bg-black/70 hidden"
+  aria-hidden="true"
+></div>
+
+<!-- Drawer -->
+<div
+  id="nav-drawer"
+  class="fixed top-0 left-0 z-50 w-full md:w-[70%]
+         -translate-x-full transition-transform duration-300 ease-in-out
+         flex flex-col"
+>
+<nav
+  class="bg-c1 flex flex-col gap-6 overflow-y-auto pb-12"
+  aria-label="Menú principal"
+>
+
+  <!-- Top bar: logo + close -->
+  <div class="flex items-center justify-between px-6 py-4 shrink-0">
+    <a href={`/${lang}/`} aria-label="Inicio">
+      <img src="/assets/navbar/logo.svg" alt="FIT" class="h-10 w-auto" />
+    </a>
+    <button id="nav-close" aria-label="Cerrar menú" class="text-c2">
+      <svg width="24" height="24" viewBox="0 0 31 35" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M30.4866 27.4332L19.7046 16.5737C22.3675 12.7103 25.7429 10.1551 26.9896 9.29315C27.0331 9.26252 27.0548 9.24502 27.0635 9.24064L27.0765 9.07001C27.0765 9.07001 25.1564 6.93923 24.3528 5.20661C23.5535 3.5265 23.4101 0.13126 23.4101 0.0962572L23.2363 0C23.2363 0 21.5074 1.05007 19.1269 3.52212C17.6586 5.0491 15.7211 7.35051 13.7185 10.5401L6.04692 2.81332L0 8.90374L9.4266 18.3982C6.15553 23.9417 1.76803 28.0632 1.7159 28.1113V28.282L8.00609 34.6218L8.16248 34.6305C8.21461 34.5868 12.7107 30.8853 15.7559 24.7773L24.444 33.528L30.4909 27.4375L30.4866 27.4332Z"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Language switcher -->
+  <div class="flex items-center w-fit gap-4 px-6 py-4 bg-c8">
+      {(["es", "en", "fr"] as Locale[]).map((l) => (
+        <a
+          href={localePath(l)}
+          class={`text-2xl transition-colors p-1 ${l === lang ? 'bg-c2 text-c1 pointer-events-none' : 'text-white hover:bg-c2/50'}`}
+          aria-current={l === lang ? "true" : undefined}
+        >
+          {localeLabels[l]}
+        </a>
+      ))}
+    </div>
+
+  <!-- Nav links -->
+  <div class="flex flex-col">
+
+    <!-- Inicio -->
+    <a
+      href={`/${lang}/`}
+      class={`block px-6 py-4 text-xl md:text-2xl transition-colors ${isHome ? active : inactive}`}
+    >
+      {n.home}
+    </a>
+
+    <!-- Sobre ▼ -->
+    <details class="group">
+      <summary
+        class={`flex items-center justify-between px-6 py-4 text-xl md:text-2xl transition-colors cursor-pointer list-none ${isSobre ? active : inactive}`}
+      >
+        {n.sobre}
+        <svg
+          class="w-4 h-4 transition-transform duration-300 group-open:rotate-180 shrink-0"
+          viewBox="0 0 34 20" fill="currentColor" aria-hidden="true"
+        >
+          <path d="M12.8721 0.00434855C12.6709 0.477851 10.9426 4.06605 8.05054 3.56648C6.34855 3.27108 6.37043 1.28151 6.38355 0.608179C3.35584 0.456137 -1.96221e-05 4.03417e-07 -1.96221e-05 4.03417e-07L16.9149 19.1486L33.8298 0C33.8298 0 30.474 0.451792 27.4463 0.608178C27.4594 1.27716 27.4813 3.27108 25.7749 3.56648C22.8828 4.06605 21.159 0.47785 20.9577 0.00434845L12.8721 0.00434855Z"/>
+        </svg>
+      </summary>
+      <div class="flex flex-col">
+        <a
+          href={`/${lang}/sobre-tovar`}
+          class={`block px-8 py-3 text-xl md:text-2xl transition-colors ${seg.startsWith('/sobre-tovar') ? active : 'text-white/70 hover:text-white'}`}
+        >
+          {n.sobreDropdown.ivanTovar}
+        </a>
+        <a
+          href={`/${lang}/sobre-fundacion`}
+          class={`block px-8 py-3 text-xl md:text-2xl transition-colors ${seg.startsWith('/sobre-fundacion') ? active : 'text-white/70 hover:text-white'}`}
+        >
+          {n.sobreDropdown.laFundacion}
+        </a>
+      </div>
+    </details>
+
+    <!-- Qué hacemos ▼ -->
+    <details class="group">
+      <summary
+        class={`flex items-center justify-between px-6 py-4 text-xl md:text-2xl transition-colors cursor-pointer list-none ${isQueHacemos ? active : inactive}`}
+      >
+        {n.queHacemos}
+        <svg
+          class="w-4 h-4 transition-transform duration-300 group-open:rotate-180 shrink-0"
+          viewBox="0 0 34 20" fill="currentColor" aria-hidden="true"
+        >
+          <path d="M12.8721 0.00434855C12.6709 0.477851 10.9426 4.06605 8.05054 3.56648C6.34855 3.27108 6.37043 1.28151 6.38355 0.608179C3.35584 0.456137 -1.96221e-05 4.03417e-07 -1.96221e-05 4.03417e-07L16.9149 19.1486L33.8298 0C33.8298 0 30.474 0.451792 27.4463 0.608178C27.4594 1.27716 27.4813 3.27108 25.7749 3.56648C22.8828 4.06605 21.159 0.47785 20.9577 0.00434845L12.8721 0.00434855Z"/>
+        </svg>
+      </summary>
+      <div class="flex flex-col">
+        <a
+          href={`/${lang}/conservamos`}
+          class={`block px-8 py-3 text-xl md:text-2xl transition-colors ${seg.startsWith('/conservamos') ? active : 'text-white/70 hover:text-white'}`}
+        >
+          {n.queHacemosDropdown.conservamos}
+        </a>
+        <a
+          href={`/${lang}/exponemos`}
+          class={`block px-8 py-3 text-xl md:text-2xl transition-colors ${seg.startsWith('/exponemos') ? active : 'text-white/70 hover:text-white'}`}
+        >
+          {n.queHacemosDropdown.exponemos}
+        </a>
+        <a
+          href={`/${lang}/publicamos`}
+          class={`block px-8 py-3 text-xl md:text-2xl transition-colors ${seg.startsWith('/publicamos') ? active : 'text-white/70 hover:text-white'}`}
+        >
+          {n.queHacemosDropdown.publicamos}
+        </a>
+      </div>
+    </details>
+
+    <!-- Noticias -->
+    <a
+      href={`/${lang}/noticias`}
+      class={`block px-6 py-4 text-xl md:text-2xl transition-colors ${isNoticias ? active : inactive}`}
+    >
+      {n.noticias}
+    </a>
+
+    <!-- Archivo digital ▼ -->
+    <details class="group">
+      <summary
+        class={`flex items-center justify-between px-6 py-4 text-xl md:text-2xl transition-colors cursor-pointer list-none ${isArchivoDigital ? active : inactive}`}
+      >
+        {n.archivoDigital}
+        <svg
+          class="w-4 h-4 transition-transform duration-300 group-open:rotate-180 shrink-0"
+          viewBox="0 0 34 20" fill="currentColor" aria-hidden="true"
+        >
+          <path d="M12.8721 0.00434855C12.6709 0.477851 10.9426 4.06605 8.05054 3.56648C6.34855 3.27108 6.37043 1.28151 6.38355 0.608179C3.35584 0.456137 -1.96221e-05 4.03417e-07 -1.96221e-05 4.03417e-07L16.9149 19.1486L33.8298 0C33.8298 0 30.474 0.451792 27.4463 0.608178C27.4594 1.27716 27.4813 3.27108 25.7749 3.56648C22.8828 4.06605 21.159 0.47785 20.9577 0.00434845L12.8721 0.00434855Z"/>
+        </svg>
+      </summary>
+      <div class="flex flex-col">
+        <a
+          href={`/${lang}/galeria`}
+          class={`block px-8 py-3 text-xl md:text-2xl transition-colors ${seg.startsWith('/galeria') ? active : 'text-white/70 hover:text-white'}`}
+        >
+          {n.archivoDropdown.obras}
+        </a>
+        <a
+          href={`/${lang}/audiovisuales`}
+          class={`block px-8 py-3 text-xl md:text-2xl transition-colors ${seg.startsWith('/audiovisuales') ? active : 'text-white/70 hover:text-white'}`}
+        >
+          {n.archivoDropdown.audiovisuales}
+        </a>
+      </div>
+    </details>
+
+    <!-- Tienda -->
+    <a
+      href="https://fundacion-ivan-tovar.myshopify.com"
+      target="_blank"
+      rel="noopener noreferrer"
+      class={`block px-6 py-4 text-xl md:text-2xl transition-colors ${inactive}`}
+    >
+      {n.tienda}<svg class="inline-block w-[0.6em] h-auto relative -top-[0.4em] rotate-45 shrink-0 text-c7" viewBox="0 0 34 20" fill="none" aria-hidden="true"><path d="M20.9577 19.1442C21.159 18.6707 22.8872 15.0825 25.7793 15.5821C27.4813 15.8775 27.4594 17.8671 27.4463 18.5404C30.474 18.6925 33.8299 19.1486 33.8299 19.1486L16.9149 -1.18237e-05L0 19.1486C0 19.1486 3.35586 18.6968 6.38357 18.5404C6.37044 17.8714 6.34857 15.8775 8.05493 15.5821C10.947 15.0825 12.6709 18.6707 12.8721 19.1442L20.9577 19.1442Z" fill="currentColor"/></svg>
+    </a>
+
+    <!-- Contacto -->
+    <a
+      href={`/${lang}/contacto`}
+      class="block px-6 py-4 text-xl md:text-2xl transition-colors bg-c4 text-c1"
+    >
+      {n.contacto}
+    </a>
+
+  </div>
+
+</nav>
+<img src="/assets/navbar/mobile_navbar_3d.svg" alt="" aria-hidden="true" class="w-full h-auto block" />
+</div>
+
+<style>
+  summary::-webkit-details-marker {
+    display: none;
+  }
+  summary::marker {
+    display: none;
+  }
+</style>
+
+<script>
+  function initMobileNav() {
+    const burger   = document.getElementById('nav-burger') as HTMLButtonElement | null;
+    const drawer   = document.getElementById('nav-drawer') as HTMLElement | null;
+    const overlay  = document.getElementById('nav-overlay') as HTMLElement | null;
+    const closeBtn = document.getElementById('nav-close') as HTMLButtonElement | null;
+
+    if (!burger || !drawer || !overlay || !closeBtn) return;
+
+    function openMenu() {
+      drawer!.classList.remove('-translate-x-full');
+      drawer!.classList.add('translate-x-0');
+      overlay!.classList.remove('hidden');
+      overlay!.classList.add('block');
+      burger!.setAttribute('aria-expanded', 'true');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeMenu() {
+      drawer!.classList.add('-translate-x-full');
+      drawer!.classList.remove('translate-x-0');
+      overlay!.classList.add('hidden');
+      overlay!.classList.remove('block');
+      burger!.setAttribute('aria-expanded', 'false');
+      document.body.style.overflow = '';
+    }
+
+    burger.addEventListener('click', openMenu);
+    closeBtn.addEventListener('click', closeMenu);
+    overlay.addEventListener('click', closeMenu);
+  }
+
+  // Run on first load and after every Astro View Transition navigation
+  initMobileNav();
+  document.addEventListener('astro:page-load', initMobileNav);
+</script>

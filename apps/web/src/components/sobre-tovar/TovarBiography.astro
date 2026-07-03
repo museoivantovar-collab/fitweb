@@ -1,0 +1,45 @@
+---
+import type { Locale } from "@/lib/i18n";
+import { useSobreTovarTranslations } from "./sobre-tovar.i18n";
+import LottiePlayer from "@/components/ui/LottiePlayer.astro";
+
+interface Props {
+  lang: Locale;
+}
+
+const { lang } = Astro.props;
+const t = useSobreTovarTranslations(lang);
+---
+
+<section class="bg-c1 w-full">
+  <div class="grid grid-cols-1 lg:grid-cols-2 min-h-[80vh]">
+
+    <!-- Left column: text — bottom on mobile/tablet, left on desktop -->
+    <div class="order-last lg:order-first flex flex-col justify-center px-8 py-16 lg:px-16 lg:py-24 lg:pl-24">
+      <h1 class="font-black text-c7 leading-none mb-8 text-6xl lg:text-7xl xl:text-8xl">
+        {t.biography.heading}
+      </h1>
+      <p class="text-base lg:text-lg text-c7 opacity-80 leading-relaxed mb-5">
+        {t.biography.paragraph1}
+      </p>
+      <p class="text-base lg:text-lg text-c7 opacity-80 leading-relaxed mb-5">
+        {t.biography.paragraph2}
+      </p>
+      <p class="text-base lg:text-lg text-c7 opacity-80 leading-relaxed">
+        {t.biography.paragraph3}
+      </p>
+    </div>
+
+    <!-- Right column: animation — top on mobile/tablet, right on desktop -->
+    <div class="order-first lg:order-last flex justify-end items-end relative overflow-hidden min-h-[60vw]">
+
+    <LottiePlayer
+      src="/lottie/tovar_portrait.json"
+      loop={false}
+      autoplay={true}
+      class="h-auto w-full aspect-821/949"
+    />
+
+    </div>
+  </div>
+</section>

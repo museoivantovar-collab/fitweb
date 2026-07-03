@@ -1,0 +1,32 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import { guardLocale, SUPPORTED_LOCALES, type Locale } from "../../../lib/i18n";
+import { fetchCollection, fetchDoc } from "../../../lib/cms";
+import type { Noticia } from "@fundacion/types";
+import NoticiaInner from "../../../components/noticias/NoticiaInner.astro";
+
+export async function getStaticPaths() {
+  const paths = [];
+
+  for (const locale of SUPPORTED_LOCALES) {
+    const { docs } = await fetchCollection<Noticia>("noticias", locale);
+    for (const noticia of docs) {
+      paths.push({ params: { lang: locale, slug: noticia.slug } });
+    }
+  }
+
+  return paths;
+}
+
+const { lang, slug } = Astro.params as { lang: string; slug: string };
+const invalid = guardLocale(lang);
+if (invalid) return invalid;
+
+const locale = lang as Locale;
+const noticia = await fetchDoc<Noticia>("noticias", slug, locale);
+if (!noticia) return new Response(null, { status: 404 });
+---
+
+<BaseLayout lang={locale} title={noticia.titulo}>
+  <NoticiaInner lang={locale} noticia={noticia} />
+</BaseLayout>

@@ -1,0 +1,28 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import { guardLocale, SUPPORTED_LOCALES, type Locale } from "../../../lib/i18n";
+import { fetchCollection } from "../../../lib/cms";
+import type { Exposicion } from "@fundacion/types";
+import ExponemosSection from "../../../components/exponemos/ExponemosSection.astro";
+import { useExponemosTranslations } from "../../../components/exponemos/exponemos.i18n";
+
+export function getStaticPaths() {
+  return SUPPORTED_LOCALES.map((lang) => ({ params: { lang } }));
+}
+
+const { lang } = Astro.params as { lang: string };
+const invalid = guardLocale(lang);
+if (invalid) return invalid;
+
+const locale = lang as Locale;
+const t = useExponemosTranslations(locale);
+
+const { docs: exposiciones } = await fetchCollection<Exposicion>("exposiciones", locale, {
+  sort: "-fechaInicio",
+  limit: "50",
+});
+---
+
+<BaseLayout lang={locale} title={t.pageTitle}>
+  <ExponemosSection lang={locale} exposiciones={exposiciones} />
+</BaseLayout>

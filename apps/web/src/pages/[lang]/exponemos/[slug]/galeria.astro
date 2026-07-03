@@ -1,0 +1,110 @@
+---
+import BaseLayout from "../../../../layouts/BaseLayout.astro";
+import { guardLocale, SUPPORTED_LOCALES, type Locale } from "../../../../lib/i18n";
+import { fetchCollection, fetchDoc, getMediaUrl } from "../../../../lib/cms";
+import type { Exposicion, Media } from "@fundacion/types";
+
+export async function getStaticPaths() {
+  const paths = [];
+
+  for (const locale of SUPPORTED_LOCALES) {
+    const { docs } = await fetchCollection<Exposicion>("exposiciones", locale);
+    for (const expo of docs) {
+      if (expo.galeria?.length) {
+        paths.push({ params: { lang: locale, slug: expo.slug } });
+      }
+    }
+  }
+
+  return paths;
+}
+
+const { lang, slug } = Astro.params as { lang: string; slug: string };
+const invalid = guardLocale(lang);
+if (invalid) return invalid;
+
+const locale = lang as Locale;
+const exposicion = await fetchDoc<Exposicion>("exposiciones", slug, locale);
+if (!exposicion) return new Response(null, { status: 404 });
+---
+
+<BaseLayout lang={locale} title={`Galería — ${exposicion.titulo}`} hideFooter>
+  <!-- Salir: fixed top-left, ExposicionInner style -->
+  <a
+    href={`/${locale}/exponemos/${slug}`}
+    class="group fixed left-0 top-16 z-20 flex items-center gap-2 bg-c2 px-6 py-4 text-c1 font-bold"
+  >
+    <img src="/icons/chevron_left.svg" alt="" aria-hidden="true" class="w-5 h-5 transition-transform duration-200 group-hover:-translate-x-1" />
+    Salir
+  </a>
+
+  <main class="flex flex-col h-svh overflow-hidden -mt-16">
+    <!-- Row: side arrows (desktop) + carousel -->
+    <div class="flex-1 min-h-0 flex flex-col md:flex-row">
+
+      <!-- Prev column — desktop only -->
+      <div class="hidden md:flex items-center justify-center w-24 bg-c7 shrink-0">
+        <button id="embla-prev-d" aria-label="Anterior" class="w-12 h-12 flex items-center justify-center cursor-pointer hover:scale-110 transition-transform">
+          <img src="/icons/chevron_left.svg" alt="" aria-hidden="true" class="w-8 h-8" />
+        </button>
+      </div>
+
+      <!-- Embla viewport -->
+      <div id="embla-gallery" class="flex-1 min-h-0 overflow-hidden bg-c7">
+        <div id="embla-gallery-container" class="flex h-full">
+          {(exposicion.galeria ?? []).map((item) => {
+            const img = item.imagen as Media;
+            return (
+              <figure class="flex-[0_0_100%] shrink-0 h-full p-4 md:p-0 flex items-center justify-center relative">
+                {getMediaUrl(img.url) && (
+                  <img
+                    src={getMediaUrl(img.url)!}
+                    alt={img.alt ?? ""}
+                    class="w-full h-full object-contain"
+                  />
+                )}
+                {item.descripcion && (
+                  <figcaption class="absolute bottom-28 left-28 text-sm text-c7 bg-c8/60 px-3 py-1">
+                    {item.descripcion}
+                  </figcaption>
+                )}
+              </figure>
+            );
+          })}
+        </div>
+      </div>
+
+      <!-- Next column — desktop only -->
+      <div class="hidden md:flex items-center justify-center w-24 bg-c7 shrink-0">
+        <button id="embla-next-d" aria-label="Siguiente" class="w-12 h-12 flex items-center justify-center cursor-pointer hover:scale-110 transition-transform">
+          <img src="/icons/chevron_right.svg" alt="" aria-hidden="true" class="w-8 h-8" />
+        </button>
+      </div>
+    </div>
+
+    <!-- Button bar — mobile only -->
+    <div class="md:hidden h-[16svh] bg-c7 shrink-0 flex items-center justify-center gap-8">
+      <button id="embla-prev-m" aria-label="Anterior" class="w-12 h-12 flex items-center justify-center cursor-pointer hover:scale-110 transition-transform">
+        <img src="/icons/chevron_left.svg" alt="" aria-hidden="true" class="w-8 h-8" />
+      </button>
+      <button id="embla-next-m" aria-label="Siguiente" class="w-12 h-12 flex items-center justify-center cursor-pointer hover:scale-110 transition-transform">
+        <img src="/icons/chevron_right.svg" alt="" aria-hidden="true" class="w-8 h-8" />
+      </button>
+    </div>
+  </main>
+</BaseLayout>
+
+<script>
+  import EmblaCarousel from "embla-carousel";
+
+  const viewport = document.getElementById("embla-gallery") as HTMLElement;
+
+  if (viewport) {
+    const embla = EmblaCarousel(viewport, { loop: true, align: "center" });
+
+    document.getElementById("embla-prev-d")?.addEventListener("click", () => embla.scrollPrev());
+    document.getElementById("embla-next-d")?.addEventListener("click", () => embla.scrollNext());
+    document.getElementById("embla-prev-m")?.addEventListener("click", () => embla.scrollPrev());
+    document.getElementById("embla-next-m")?.addEventListener("click", () => embla.scrollNext());
+  }
+</script>

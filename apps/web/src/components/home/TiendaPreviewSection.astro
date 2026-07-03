@@ -1,0 +1,75 @@
+---
+import type { Locale } from "@/lib/i18n";
+import { useHomeTranslations } from "./home.i18n";
+
+interface Props {
+  lang: Locale;
+}
+
+const { lang } = Astro.props;
+const t = useHomeTranslations(lang);
+---
+
+<section class="w-full bg-c8 overflow-hidden">
+
+  <!-- Mobile: 3-row grid -->
+  <div class="grid grid-rows-3 lg:hidden py-24">
+
+    <!-- Row 1: image 1 — 70vw, left-aligned -->
+    <img src="/assets/shop/1.svg" alt="" class="w-[70vw] justify-self-start" />
+
+    <!-- Row 2: title + button -->
+    <div class="flex flex-col items-center justify-center gap-5 text-center px-6 py-8">
+      <h2 class="text-c7 font-bold text-2xl md:text-4xl leading-snug">
+        {t.tiendaPreview.title}
+      </h2>
+      <a href="https://fundacion-ivan-tovar.myshopify.com" target="_blank" rel="noopener noreferrer" class="group inline-flex items-stretch font-normal text-sm h-9 md:text-2xl md:h-11">
+        <span class="px-5 md:px-6 flex items-center border border-c6 text-c6 transition-colors group-hover:bg-c6 group-hover:text-c1">{t.tiendaPreview.button}</span>
+        <div class="bg-c6 p-2 flex items-center">
+          <svg width="28" height="18" viewBox="0 0 45 29" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M44.4875 4.02528C44.4701 4.05591 38.9271 6.65046 31.073 7.89305V0H14.1964V7.63491C9.45266 6.61983 4.63944 4.64657 0.152031 1.23821L0 1.71512C0.078193 1.96014 7.18072 19.5314 17.5109 26.4137C20.517 28.3913 23.7794 28.8945 27.2894 27.9319C33.2711 25.7837 39.0878 17.9562 44.6395 4.51094L44.4831 4.02528H44.4875ZM17.7237 8.2212V3.54837H27.5456V8.33058C24.4657 8.6106 21.1425 8.63685 17.7237 8.2212Z" fill="#182718" class="fill-c1"/>
+          </svg>
+        </div>
+      </a>
+    </div>
+
+    <!-- Row 3: image 4 — 70vw, right-aligned -->
+    <img src="/assets/shop/4.svg" alt="" class="w-[70vw] justify-self-end" />
+
+  </div>
+
+  <!-- Desktop: staggered 2-column layout -->
+  <div class="hidden lg:grid lg:grid-cols-[3fr_2fr] lg:gap-48 lg:min-h-[60vh] lg:pb-24">
+
+    <!-- Left col: single image -->
+    <img src="/assets/shop/left.png" alt="" class="w-full h-full object-cover" />
+
+    <!-- Right col: title+button top, img4 bottom-right -->
+    <div class="flex flex-col justify-center items-start gap-12 py-8">
+
+      <div class="flex flex-col items-start gap-4">
+        <h2 class="text-c7 font-bold text-4xl leading-snug">
+          {t.tiendaPreview.title}
+        </h2>
+        <a href="https://fundacion-ivan-tovar.myshopify.com" target="_blank" rel="noopener noreferrer" class="group inline-flex items-stretch self-start font-normal text-base h-10">
+          <span class="px-6 flex items-center border border-c6 text-c6 transition-colors group-hover:bg-c6 group-hover:text-c1">{t.tiendaPreview.button}</span>
+          <div class="bg-c6 p-2 flex items-center">
+            <svg width="28" height="18" viewBox="0 0 45 29" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M44.4875 4.02528C44.4701 4.05591 38.9271 6.65046 31.073 7.89305V0H14.1964V7.63491C9.45266 6.61983 4.63944 4.64657 0.152031 1.23821L0 1.71512C0.078193 1.96014 7.18072 19.5314 17.5109 26.4137C20.517 28.3913 23.7794 28.8945 27.2894 27.9319C33.2711 25.7837 39.0878 17.9562 44.6395 4.51094L44.4831 4.02528H44.4875ZM17.7237 8.2212V3.54837H27.5456V8.33058C24.4657 8.6106 21.1425 8.63685 17.7237 8.2212Z" fill="#182718" class="fill-c1"/>
+            </svg>
+          </div>
+        </a>
+      </div>
+
+      <!-- img4: bottom-right, partially off-screen right -->
+      <img
+        src="/assets/shop/4.svg"
+        alt=""
+        class=""
+      />
+
+    </div>
+
+  </div>
+
+</section>

@@ -1,0 +1,83 @@
+---
+import type { Locale } from "@/lib/i18n";
+import { getMediaUrl } from "@/lib/cms";
+import { useNoticiasTranslations } from "./noticias.i18n";
+import type { Noticia, Media } from "@fundacion/types";
+
+interface Props {
+  lang: Locale;
+  noticia: Noticia;
+}
+
+const { lang, noticia } = Astro.props;
+const t = useNoticiasTranslations(lang);
+
+const imagen = typeof noticia.imagen === "object" && noticia.imagen !== null
+  ? (noticia.imagen as Media)
+  : null;
+
+const badgeClass: Record<string, string> = {
+  actualidad: "bg-c4",
+  publicaciones: "bg-c3",
+  eventos: "bg-c2",
+};
+
+const badgeColor = noticia.categoria ? badgeClass[noticia.categoria] ?? "bg-c7/30" : null;
+const categoryLabel = noticia.categoria ? t.filters[noticia.categoria as keyof typeof t.filters] : null;
+
+const formattedDate = new Date(noticia.fecha).toLocaleDateString(lang, {
+  year: "numeric",
+  month: "long",
+  day: "numeric",
+});
+---
+
+<a
+  href={`/${lang}/noticias/${noticia.slug}`}
+  class="group flex flex-col h-full bg-c7 rounded-xs overflow-hidden hover:shadow-lg transition-shadow duration-300"
+>
+  <!-- Image -->
+  <div class="relative aspect-video overflow-hidden bg-c1/20">
+    {imagen && getMediaUrl(imagen.url) ? (
+      <img
+        src={getMediaUrl(imagen.url)!}
+        alt={imagen.alt ?? noticia.titulo}
+        class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+        loading="lazy"
+      />
+    ) : (
+      <div class="w-full h-full bg-c1/30 flex items-center justify-center">
+        <svg class="w-12 h-12 text-c7/30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+      </div>
+    )}
+    {categoryLabel && (
+      <span class={`absolute top-0 right-0 ${badgeColor} text-c7 text-xs font-semibold uppercase tracking-wide px-3 py-1`}>
+        {categoryLabel}
+      </span>
+    )}
+  </div>
+
+  <!-- Category color bar -->
+  <div class={`w-full h-3 ${badgeColor ?? "bg-c7/30"}`}></div>
+
+  <!-- Body -->
+  <div class="flex flex-col flex-1 p-5 gap-3">
+    <h2 class="text-c1 font-bold text-base md:text-lg leading-snug group-hover:opacity-80 transition-opacity line-clamp-2">
+      {noticia.titulo}
+    </h2>
+
+    <!-- Date -->
+    <div class="flex items-center gap-2 text-c1/50 text-xs">
+      <svg class="w-4 h-4 shrink-0" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M31.1599 4.84346V0H27.6325V4.84346H8.00609V0H4.47872V4.84346H0V31.9835C0.0651608 32.0185 5.73849 34.3943 13.9922 35.3262C16.3945 35.5931 19.0009 35.6631 21.8072 35.5318C26.5856 35.2431 31.2338 33.8036 35.669 31.9835V4.84346H31.1599ZM7.7802 27.3281H4.18766V23.8017H7.7802V27.3281ZM7.7802 21.2377H4.18766V17.7112H7.7802V21.2377ZM7.7802 14.911H4.18766V11.3845H7.7802V14.911ZM15.5821 27.3281H11.9896V23.8017H15.5821V27.3281ZM15.5821 21.2377H11.9896V17.7112H15.5821V21.2377ZM15.5821 14.911H11.9896V11.3845H15.5821V14.911ZM23.3884 21.2377H19.7959V17.7112H23.3884V21.2377ZM23.3884 14.911H19.7959V11.3845H23.3884V14.911ZM31.1903 21.2377H27.5978V17.7112H31.1903V21.2377ZM31.1903 14.911H27.5978V11.3845H31.1903V14.911Z" fill="currentColor"/>
+      </svg>
+      <time datetime={noticia.fecha}>{formattedDate}</time>
+    </div>
+
+    {noticia.extracto && (
+      <p class="text-c1/70 text-sm leading-relaxed line-clamp-3">{noticia.extracto}</p>
+    )}
+  </div>
+</a>

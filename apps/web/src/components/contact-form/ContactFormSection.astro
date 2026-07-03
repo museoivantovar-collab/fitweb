@@ -1,0 +1,231 @@
+---
+import type { Locale } from "@/lib/i18n";
+import { useContactFormTranslations } from "./contact-form.i18n";
+
+interface Props {
+  lang: Locale;
+}
+
+const { lang } = Astro.props;
+const t = useContactFormTranslations(lang);
+
+const tabs = [
+  { key: "conservacion", label: t.tabs.conservacion },
+  { key: "certificar",   label: t.tabs.certificar   },
+  { key: "preguntas",    label: t.tabs.preguntas     },
+] as const;
+
+// Per-tab colour config — Tailwind classes must appear in the template to be included by JIT
+const tabConfig: Record<string, { active: string; inactive: string }> = {
+  conservacion: {
+    active:   "bg-c2 text-c1 border-c2",
+    inactive: "bg-transparent text-c2 border-c2/50 hover:border-c2",
+  },
+  certificar: {
+    active:   "bg-c6 text-c1 border-c6",
+    inactive: "bg-transparent text-c6 border-c6/50 hover:border-c6",
+  },
+  preguntas: {
+    active:   "bg-c4 text-c1 border-c4",
+    inactive: "bg-transparent text-c4 border-c4/50 hover:border-c4",
+  },
+};
+
+// Panel placeholder backgrounds (same colours as tab accent)
+const panelBg: Record<string, string> = {
+  conservacion: "bg-c2",
+  certificar:   "bg-c6",
+  preguntas:    "bg-c4",
+};
+
+---
+
+<section id="contacto" class="w-full pl-8 md:pl-12 lg:pl-16 pb-20">
+  <div class="flex flex-col lg:grid lg:grid-cols-2 lg:gap-0 items-stretch">
+
+    <!-- LEFT — form -->
+    <div class="w-full pr-8 md:pr-12 lg:pr-16 order-2 lg:order-1">
+      <h2 class="text-2xl md:text-3xl font-black text-c7 mb-6">
+        {t.heading}
+      </h2>
+
+      <!-- Tab switcher -->
+      <div
+        class="flex gap-0 mb-8"
+        role="tablist"
+        aria-label={t.heading}
+        data-tab-group
+      >
+        {tabs.map(({ key, label }, i) => (
+          <button
+            type="button"
+            role="tab"
+            data-tab={key}
+            data-active-class={tabConfig[key].active}
+            data-inactive-class={tabConfig[key].inactive}
+            aria-selected={i === 0 ? "true" : "false"}
+            class={[
+              "px-5 py-2.5 text-xs sm:text-sm font-bold border transition-colors duration-200 focus:outline-none cursor-pointer",
+              i === 0 ? tabConfig[key].active : tabConfig[key].inactive,
+            ].join(" ")}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      <!-- Form -->
+      <form method="POST" class="flex flex-col gap-4" novalidate>
+        <input type="hidden" name="tipo" data-tipo-input value="conservacion" />
+
+        <input
+          type="text"
+          name="nombre"
+          placeholder={t.fields.nombre}
+          required
+          class="w-full bg-c7 text-c1 placeholder:text-c1/50 px-4 py-3 focus:outline-none focus:ring-1 focus:ring-c1/20 transition-colors"
+        />
+
+        <input
+          type="email"
+          name="correo"
+          placeholder={t.fields.correo}
+          required
+          class="w-full bg-c7 text-c1 placeholder:text-c1/50 px-4 py-3 focus:outline-none focus:ring-1 focus:ring-c1/20 transition-colors"
+        />
+
+        <textarea
+          name="detalle"
+          placeholder={t.fields.detalle}
+          rows={8}
+          required
+          class="w-full bg-c7 text-c1 placeholder:text-c1/50 px-4 py-3 focus:outline-none focus:ring-1 focus:ring-c1/20 transition-colors resize-none"
+        ></textarea>
+
+        <!-- File upload -->
+        <label class="block cursor-pointer">
+          <input type="file" name="imagen" accept="image/*" class="sr-only" />
+          <div
+            class="w-full bg-c7 text-c1/60 py-5 text-center text-sm font-semibold opacity-50 hover:opacity-70 transition-opacity select-none"
+          >
+            {t.fields.subirImagen}
+          </div>
+        </label>
+
+        <!-- Submit -->
+        <button
+          type="submit"
+          class="group inline-flex items-stretch self-start font-black text-base h-10 cursor-pointer"
+        >
+          <span class="px-6 flex items-center border border-c2 text-c2 transition-colors duration-300 group-hover:bg-c2 group-hover:text-c1">
+            {t.submit}
+          </span>
+          <svg class="h-full w-auto" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M49.9924 25L33.486 35.6178C33.486 35.6178 33.2341 27.9696 22.9348 29.3619C11.9408 30.8497 14.2541 50 14.2541 50H0V0H14.2617C14.2617 0 11.9408 19.1563 22.9424 20.6381C33.2417 22.0304 33.4937 14.3822 33.4937 14.3822L50 25H49.9924Z" class="fill-c2 transition-colors duration-300"/>
+          </svg>
+        </button>
+      </form>
+    </div>
+
+    <!-- RIGHT — image switcher (flush to screen right edge) -->
+    <div
+      class="relative mb-8 lg:mb-0 h-[40svh] lg:h-auto lg:min-h-130 overflow-hidden order-1 lg:order-2"
+      aria-hidden="true"
+    >
+      {tabs.map(({ key }, i) => (
+        <div
+          data-img-panel={key}
+          data-pos={String(i)}
+          class:list={[
+            "absolute inset-0 flex items-center justify-center",
+            panelBg[key],
+          ]}
+        >
+          <!-- Placeholder image icon -->
+          <svg
+            width="56"
+            height="56"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1"
+            class="text-c1/30"
+          >
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+            <circle cx="8.5" cy="8.5" r="1.5" />
+            <polyline points="21 15 16 10 5 21" />
+          </svg>
+        </div>
+      ))}
+    </div>
+
+  </div>
+</section>
+
+<style is:global>
+  [data-img-panel][data-pos="0"] {
+    transform: translateX(0);
+    z-index: 1;
+    transition: transform 500ms ease-in-out;
+  }
+  [data-img-panel][data-pos="1"] {
+    transform: translateX(calc(100% - 48px));
+    z-index: 2;
+    transition: transform 500ms ease-in-out;
+  }
+  [data-img-panel][data-pos="2"] {
+    transform: translateX(calc(100% - 24px));
+    z-index: 3;
+    transition: transform 500ms ease-in-out;
+  }
+</style>
+
+<script>
+  function initContactForm() {
+    const tabGroup = document.querySelector<HTMLElement>("[data-tab-group]");
+    if (!tabGroup) return;
+
+    const tabButtons = Array.from(
+      tabGroup.querySelectorAll<HTMLButtonElement>("[data-tab]")
+    );
+    const panels = Array.from(
+      document.querySelectorAll<HTMLElement>("[data-img-panel]")
+    );
+    const tipoInput = document.querySelector<HTMLInputElement>("[data-tipo-input]");
+
+    function activate(key: string) {
+      // Update tab button classes
+      tabButtons.forEach((btn) => {
+        const isActive = btn.dataset.tab === key;
+        btn.setAttribute("aria-selected", isActive ? "true" : "false");
+
+        const activeClass   = btn.dataset.activeClass   ?? "";
+        const inactiveClass = btn.dataset.inactiveClass ?? "";
+
+        // Remove both sets first, then apply the correct one
+        activeClass.split(" ").forEach((c) => c && btn.classList.remove(c));
+        inactiveClass.split(" ").forEach((c) => c && btn.classList.remove(c));
+
+        const apply = isActive ? activeClass : inactiveClass;
+        apply.split(" ").forEach((c) => c && btn.classList.add(c));
+      });
+
+      // Sync hidden input
+      if (tipoInput) tipoInput.value = key;
+
+      const activeIdx = tabButtons.findIndex((b) => b.dataset.tab === key);
+      panels.forEach((panel) => {
+        const panelKey = panel.dataset.imgPanel ?? "";
+        const panelIdx = tabButtons.findIndex((b) => b.dataset.tab === panelKey);
+        const offset   = (panelIdx - activeIdx + tabButtons.length) % tabButtons.length;
+        panel.dataset.pos = String(offset);
+      });
+    }
+
+    tabButtons.forEach((btn) => {
+      btn.addEventListener("click", () => activate(btn.dataset.tab!));
+    });
+  }
+
+  document.addEventListener("astro:page-load", initContactForm);
+</script>

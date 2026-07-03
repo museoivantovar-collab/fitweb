@@ -1,0 +1,35 @@
+---
+import type { Locale } from "@/lib/i18n";
+import { useAboutTranslations } from "./about-foundation.i18n";
+import Service from "./Service.astro";
+
+interface Props {
+  lang: Locale;
+}
+
+const { lang } = Astro.props;
+const t = useAboutTranslations(lang);
+const s = t.services;
+---
+
+<section class="flex flex-col w-full bg-c1">
+  <Service
+    title={s.conservamos.title}
+    description={s.conservamos.description}
+    icon="/assets/icons/conservamos_icon.svg"
+    href={`/${lang}/conservamos`}
+  />
+  <Service
+    title={s.exponemos.title}
+    description={s.exponemos.description}
+    icon="/assets/icons/exponemos_icon.svg"
+    href={`/${lang}/exponemos`}
+  />
+  <Service
+    title={s.publicamos.title}
+    description={s.publicamos.description}
+    icon="/assets/icons/publicamos_icon.svg"
+    href={`/${lang}/publicamos`}
+  />
+  <img src="/assets/bottom_section_separation.svg" alt="" class="w-full block bg-c8" />
+</section>

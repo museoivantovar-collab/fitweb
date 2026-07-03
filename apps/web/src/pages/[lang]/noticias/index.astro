@@ -1,0 +1,28 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import { guardLocale, SUPPORTED_LOCALES, type Locale } from "../../../lib/i18n";
+import { fetchCollection } from "../../../lib/cms";
+import type { Noticia } from "@fundacion/types";
+import NewsSection from "../../../components/noticias/NewsSection.astro";
+import { useNoticiasTranslations } from "../../../components/noticias/noticias.i18n";
+
+export function getStaticPaths() {
+  return SUPPORTED_LOCALES.map((lang) => ({ params: { lang } }));
+}
+
+const { lang } = Astro.params as { lang: string };
+const invalid = guardLocale(lang);
+if (invalid) return invalid;
+
+const locale = lang as Locale;
+const t = useNoticiasTranslations(locale);
+
+const { docs: noticias } = await fetchCollection<Noticia>("noticias", locale, {
+  sort: "-fecha",
+  limit: "50",
+});
+---
+
+<BaseLayout lang={locale} title={t.pageTitle}>
+  <NewsSection lang={locale} noticias={noticias} />
+</BaseLayout>

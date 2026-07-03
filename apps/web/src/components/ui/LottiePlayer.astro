@@ -1,0 +1,65 @@
+---
+import type { Fit, Mode, Align } from "@lottiefiles/dotlottie-web";
+
+interface Props {
+  src: string;
+  loop?: boolean;
+  autoplay?: boolean;
+  mode?: Mode;
+  fit?: Fit;
+  align?: Align;
+  class?: string;
+  style?: string;
+}
+
+const {
+  src,
+  loop = true,
+  autoplay = true,
+  mode = "forward",
+  fit = "contain",
+  align,
+  class: className,
+  style,
+} = Astro.props;
+
+const id = `lottie-${Math.random().toString(36).slice(2, 7)}`;
+---
+
+<canvas
+  id={id}
+  class={className}
+  style={style}
+  data-lottie-src={src}
+  data-lottie-loop={String(loop)}
+  data-lottie-autoplay={String(autoplay)}
+  data-lottie-mode={mode}
+  data-lottie-fit={fit}
+  data-lottie-align={align ? JSON.stringify(align) : undefined}
+></canvas>
+
+<script>
+  import type { Fit, Mode, Align } from "@lottiefiles/dotlottie-web";
+  import { DotLottie } from "@lottiefiles/dotlottie-web";
+
+  document.addEventListener("astro:page-load", () => {
+    document
+      .querySelectorAll<HTMLCanvasElement>("canvas[data-lottie-src]")
+      .forEach((canvas) => {
+        const src = canvas.dataset.lottieSrc!;
+        const loop = canvas.dataset.lottieLoop !== "false";
+        const autoplay = canvas.dataset.lottieAutoplay !== "false";
+        const mode = (canvas.dataset.lottieMode ?? "forward") as Mode;
+        const fit = (canvas.dataset.lottieFit ?? "contain") as Fit;
+        const align = canvas.dataset.lottieAlign
+          ? (JSON.parse(canvas.dataset.lottieAlign) as Align)
+          : undefined;
+
+        const player = new DotLottie({ canvas, src, loop, autoplay, mode, layout: { fit, align }, renderConfig: { autoResize: true } });
+
+        player.addEventListener("load", () => {
+          canvas.dispatchEvent(new CustomEvent("lottie:ready", { detail: { player } }));
+        });
+      });
+  });
+</script>

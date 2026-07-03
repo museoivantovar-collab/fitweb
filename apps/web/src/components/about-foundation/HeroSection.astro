@@ -1,0 +1,40 @@
+---
+import type { Locale } from "@/lib/i18n";
+import { useAboutTranslations } from "./about-foundation.i18n";
+import LottiePlayer from "@/components/ui/LottiePlayer.astro";
+
+interface Props {
+  lang: Locale;
+}
+
+const { lang } = Astro.props;
+const t = useAboutTranslations(lang);
+const h = t.hero;
+---
+
+<section class="bg-c1 grid grid-cols-1 lg:grid-cols-2 w-full">
+  <!-- Left: illustration placeholder (shown second on mobile) -->
+  <div class="flex items-center justify-start order-2 lg:order-1 my-8 lg:my-0 min-w-0">
+    <LottiePlayer
+      src="/lottie/about_figure.json"
+      loop={true}
+      autoplay={true}
+      mode="forward"
+      class="w-full h-auto"
+      style="aspect-ratio: 790 / 610;"
+    />
+  </div>
+
+  <!-- Right: text content (shown first on mobile) -->
+  <div class="text-c7 flex flex-col justify-center px-8 lg:px-16 py-4 order-1 lg:order-2">
+    <h1 class="text-4xl lg:text-6xl font-black leading-tight">
+      {h.title}
+    </h1>
+    <p class="mt-6 text-base lg:text-lg leading-relaxed opacity-90">
+      {h.p1}
+    </p>
+    <p class="mt-4 text-base lg:text-lg leading-relaxed opacity-90">
+      {h.p2}
+    </p>
+  </div>
+</section>

@@ -1,0 +1,109 @@
+---
+import type { Locale } from "@/lib/i18n";
+import { useNoticiasTranslations } from "./noticias.i18n";
+import NewsThumbnail from "./NewsThumbnail.astro";
+import type { Noticia } from "@fundacion/types";
+
+interface Props {
+  lang: Locale;
+  noticias: Noticia[];
+}
+
+const { lang, noticias } = Astro.props;
+const t = useNoticiasTranslations(lang);
+
+type FilterKey = "all" | "actualidad" | "publicaciones" | "eventos";
+
+const filterColors: Record<FilterKey, { active: string; inactive: string }> = {
+  all:          { active: "bg-c7 text-c1 border-c7",        inactive: "bg-transparent text-c7 border-c7/40 hover:border-c7" },
+  actualidad:   { active: "bg-c4 text-c1 border-c4",        inactive: "bg-transparent text-c4 border-c4/40 hover:border-c4" },
+  publicaciones:{ active: "bg-c3 text-c1 border-c3",        inactive: "bg-transparent text-c3 border-c3/40 hover:border-c3" },
+  eventos:      { active: "bg-c2 text-c1 border-c2",        inactive: "bg-transparent text-c2 border-c2/40 hover:border-c2" },
+};
+
+const filters: { key: FilterKey; label: string }[] = [
+  { key: "all", label: t.filters.all },
+  { key: "actualidad", label: t.filters.actualidad },
+  { key: "publicaciones", label: t.filters.publicaciones },
+  { key: "eventos", label: t.filters.eventos },
+];
+---
+
+<section class="w-full bg-c1 py-16 px-8 md:px-16 lg:px-24">
+  <!-- Header: title + filter tabs -->
+  <div class="flex flex-wrap items-center gap-4 mb-10">
+    <h1 class="text-c7 text-5xl md:text-6xl font-black leading-none shrink-0">
+      {t.pageTitle}
+    </h1>
+    <div class="flex flex-wrap gap-2" id="news-filters">
+      {filters.map((f) => (
+        <button
+          type="button"
+          data-filter={f.key}
+          data-active={filterColors[f.key].active}
+          data-inactive={filterColors[f.key].inactive}
+          class={`px-4 py-1.5 text-sm font-medium border rounded-none transition-colors duration-200 cursor-pointer ${f.key === "all" ? filterColors[f.key].active : filterColors[f.key].inactive}`}
+        >
+          {f.label}
+        </button>
+      ))}
+    </div>
+  </div>
+
+  <!-- Grid -->
+  {noticias.length === 0 ? (
+    <p class="text-c7/60 text-base">{t.noResults}</p>
+  ) : (
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="news-grid">
+      {noticias.map((noticia) => (
+        <div data-categoria={noticia.categoria ?? "none"} class="news-card h-full">
+          <NewsThumbnail lang={lang} noticia={noticia} />
+        </div>
+      ))}
+    </div>
+  )}
+
+  <!-- No results after filtering -->
+  <p id="news-empty" class="text-c7/60 text-base hidden">{t.noResults}</p>
+</section>
+
+<script>
+  document.addEventListener("astro:page-load", () => {
+    const filtersEl = document.getElementById("news-filters");
+    const grid = document.getElementById("news-grid");
+    const emptyMsg = document.getElementById("news-empty");
+
+    if (filtersEl && grid) {
+      const buttons = filtersEl.querySelectorAll<HTMLButtonElement>("button[data-filter]");
+      const cards = grid.querySelectorAll<HTMLElement>(".news-card");
+
+      buttons.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const active = btn.dataset.filter ?? "all";
+
+          // Update button styles
+          buttons.forEach((b) => {
+            const isActive = b.dataset.filter === active;
+            const activeClasses = (b.dataset.active ?? "").split(" ").filter(Boolean);
+            const inactiveClasses = (b.dataset.inactive ?? "").split(" ").filter(Boolean);
+            [...activeClasses, ...inactiveClasses].forEach((cls) => b.classList.remove(cls));
+            (isActive ? activeClasses : inactiveClasses).forEach((cls) => b.classList.add(cls));
+          });
+
+          // Show/hide cards
+          let visible = 0;
+          cards.forEach((card) => {
+            const cat = card.dataset.categoria ?? "none";
+            const show = active === "all" || cat === active;
+            card.style.display = show ? "" : "none";
+            if (show) visible++;
+          });
+
+          if (emptyMsg) {
+            emptyMsg.classList.toggle("hidden", visible > 0);
+          }
+        });
+      });
+    }
+  });
+</script>

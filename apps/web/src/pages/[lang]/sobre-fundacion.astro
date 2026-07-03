@@ -1,0 +1,23 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { guardLocale, SUPPORTED_LOCALES, type Locale } from "../../lib/i18n";
+import HeroSection from "../../components/about-foundation/HeroSection.astro";
+import ServiceSection from "../../components/about-foundation/ServiceSection.astro";
+import MembersCarousel from "../../components/about-foundation/MembersCarousel.astro";
+
+export function getStaticPaths() {
+  return SUPPORTED_LOCALES.map((lang) => ({ params: { lang } }));
+}
+
+const { lang } = Astro.params as { lang: string };
+const invalid = guardLocale(lang);
+if (invalid) return invalid;
+
+const locale = lang as Locale;
+---
+
+<BaseLayout lang={locale} title="Sobre la Fundación">
+  <HeroSection lang={locale} />
+  <ServiceSection lang={locale} />
+  <MembersCarousel lang={locale} />
+</BaseLayout>

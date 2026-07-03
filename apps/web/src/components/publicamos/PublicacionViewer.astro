@@ -1,0 +1,187 @@
+---
+import type { Locale } from "@/lib/i18n";
+import { getMediaUrl } from "@/lib/cms";
+import { usePublicamosTranslations } from "./publicamos.i18n";
+import type { Publicacion, Media } from "@fundacion/types";
+
+interface Props {
+  lang: Locale;
+  publicaciones: Publicacion[];
+}
+
+const { lang, publicaciones } = Astro.props;
+const t = usePublicamosTranslations(lang);
+
+function resolveMedia(field: unknown): Media | null {
+  return typeof field === "object" && field !== null ? (field as Media) : null;
+}
+
+const pubData = publicaciones.map((pub, i) => {
+  const galeria = (pub.galeria ?? [])
+    .map((entry) => resolveMedia(entry.imagen))
+    .filter((m): m is Media => m !== null && !!m.url);
+  return { pub, galeria, isFirst: i === 0 };
+});
+---
+
+<div class="flex flex-col h-full">
+
+  <!-- Imagenes panel -->
+  <div data-viewer-panel="imagenes" class="relative flex-1 min-h-0 overflow-hidden">
+    {pubData.map(({ pub, galeria, isFirst }) => (
+      <div
+        data-pub-slides={pub.id}
+        class:list={["absolute inset-0", !isFirst && "hidden"]}
+      >
+        {galeria.length > 0 ? (
+          <>
+            <!-- Prev button -->
+            <button
+              data-pub-prev={pub.id}
+              aria-label="Anterior"
+              class="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-c2 text-c1 flex items-center justify-center transition-colors cursor-pointer group/btn"
+            >
+              <img src="/icons/chevron_left.svg" alt="" aria-hidden="true" class="w-5 h-5 transition-transform duration-200 group-hover/btn:scale-110" />
+            </button>
+
+            <!-- Embla viewport -->
+            <div data-pub-carousel={pub.id} class="overflow-hidden h-full">
+              <div class="flex h-full">
+                {galeria.map((img) => (
+                  <div class="flex-[0_0_100%] shrink-0 h-full">
+                    <img
+                      src={getMediaUrl(img.url)!}
+                      alt={img.alt ?? `${t.imageAlt} ${pub.titulo}`}
+                      class="w-full h-full object-contain"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <!-- Next button -->
+            <button
+              data-pub-next={pub.id}
+              aria-label="Siguiente"
+              class="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-c2 text-c1 flex items-center justify-center transition-colors cursor-pointer group/btn"
+            >
+              <img src="/icons/chevron_right.svg" alt="" aria-hidden="true" class="w-5 h-5 transition-transform duration-200 group-hover/btn:scale-110" />
+            </button>
+          </>
+        ) : (
+          <div class="absolute inset-0 flex items-center justify-center">
+            <span class="text-c7/40 text-sm">{t.viewer.sinImagenes}</span>
+          </div>
+        )}
+      </div>
+    ))}
+  </div>
+
+  <!-- 3D model placeholder panel -->
+  <div
+    data-viewer-panel="modelo3d"
+    class="hidden flex-1 min-h-0 items-center justify-center bg-c1/30 border border-c7/10"
+  >
+    <p class="text-c7/40 text-sm text-center px-4">
+      {t.viewer.modelo3d}<br />
+      <span class="text-xs opacity-60">— próximamente —</span>
+    </p>
+  </div>
+
+  <!-- Toggle buttons — centered at bottom -->
+  <div class="flex justify-center mt-6 shrink-0">
+    <button
+      data-viewer-tab="modelo3d"
+      data-viewer-active="false"
+      class="px-6 py-2 text-sm font-bold bg-c1/40 text-c7 transition-colors data-[viewer-active=true]:bg-c2 data-[viewer-active=true]:text-c1 data-[viewer-active=false]:cursor-pointer"
+    >
+      {t.viewer.modelo3d}
+    </button>
+    <button
+      data-viewer-tab="imagenes"
+      data-viewer-active="true"
+      class="px-6 py-2 text-sm font-bold bg-c1/40 text-c7 transition-colors data-[viewer-active=true]:bg-c2 data-[viewer-active=true]:text-c1 data-[viewer-active=false]:cursor-pointer"
+    >
+      {t.viewer.imagenes}
+    </button>
+  </div>
+
+</div>
+
+<script>
+  import EmblaCarousel from "embla-carousel";
+  import type { EmblaCarouselType } from "embla-carousel";
+  import { gsap } from "gsap";
+
+  function initViewer() {
+    const tabs = document.querySelectorAll<HTMLButtonElement>("[data-viewer-tab]");
+    const panels = document.querySelectorAll<HTMLElement>("[data-viewer-panel]");
+
+    // Initialize one Embla instance per publication carousel
+    const emblaMap = new Map<string, EmblaCarouselType>();
+
+    document.querySelectorAll<HTMLElement>("[data-pub-carousel]").forEach((el) => {
+      const id = el.dataset.pubCarousel!;
+      const embla = EmblaCarousel(el, { loop: true, align: "center" });
+      emblaMap.set(id, embla);
+
+      // Wire prev/next buttons
+      const prev = document.querySelector<HTMLButtonElement>(`[data-pub-prev="${id}"]`);
+      const next = document.querySelector<HTMLButtonElement>(`[data-pub-next="${id}"]`);
+      prev?.addEventListener("click", () => embla.scrollPrev());
+      next?.addEventListener("click", () => embla.scrollNext());
+    });
+
+    function switchToPanel(targetKey: string) {
+      const currentPanel = [...panels].find((p) => !p.classList.contains("hidden"));
+      const nextPanel = [...panels].find((p) => p.dataset.viewerPanel === targetKey);
+
+      tabs.forEach((t) => {
+        t.dataset.viewerActive = t.dataset.viewerTab === targetKey ? "true" : "false";
+      });
+
+      if (!nextPanel || currentPanel === nextPanel) return;
+
+      if (currentPanel) {
+        gsap.to(currentPanel, {
+          opacity: 0,
+          duration: 0.5,
+          ease: "power1.in",
+          onComplete: () => {
+            currentPanel.classList.add("hidden");
+            currentPanel.classList.remove("flex");
+            nextPanel.classList.remove("hidden");
+            nextPanel.classList.add("flex");
+            gsap.fromTo(nextPanel, { opacity: 0 }, { opacity: 1, duration: 0.5, ease: "power1.out" });
+          },
+        });
+      } else {
+        nextPanel.classList.remove("hidden");
+        nextPanel.classList.add("flex");
+        gsap.fromTo(nextPanel, { opacity: 0 }, { opacity: 1, duration: 0.5, ease: "power1.out" });
+      }
+    }
+
+    // Tab toggle
+    tabs.forEach((tab) => {
+      tab.addEventListener("click", () => {
+        switchToPanel(tab.dataset.viewerTab!);
+      });
+    });
+
+    // Accordion selection sync
+    document.addEventListener("publicacion:select", (e: Event) => {
+      const { id } = (e as CustomEvent<{ id: string }>).detail;
+
+      // Show the matching slide group, hide others
+      document.querySelectorAll<HTMLElement>("[data-pub-slides]").forEach((el) => {
+        el.classList.toggle("hidden", el.dataset.pubSlides !== id);
+      });
+
+      // Reset to imagenes tab
+      switchToPanel("imagenes");
+    });
+  }
+
+  document.addEventListener("astro:page-load", initViewer);
+</script>

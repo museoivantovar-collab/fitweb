@@ -1,0 +1,142 @@
+---
+import "../../styles/global.css";
+import { guardLocale, SUPPORTED_LOCALES, type Locale } from "../../lib/i18n";
+import { useWipTranslations } from "../../components/wip/wip.i18n";
+import LottiePlayer from "../../components/ui/LottiePlayer.astro";
+import ContactFormSection from "../../components/contact-form/ContactFormSection.astro";
+import NewsletterSection from "../../components/contact/NewsletterSection.astro";
+import { ClientRouter } from "astro:transitions";
+
+export function getStaticPaths() {
+  return SUPPORTED_LOCALES.map((lang) => ({ params: { lang } }));
+}
+
+const { lang } = Astro.params as { lang: string };
+const invalid = guardLocale(lang);
+if (invalid) return invalid;
+
+const locale = lang as Locale;
+const t = useWipTranslations(locale);
+
+const localeLabels: Record<Locale, string> = { es: "ES", en: "EN", fr: "FR" };
+const currentPath = Astro.url.pathname;
+const localePath = (l: Locale) => currentPath.replace(new RegExp(`^/${locale}`), `/${l}`);
+---
+
+<!doctype html>
+<html lang={locale}>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content={t.hero.subtitle} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>{t.pageTitle} — Fundación Iván Tovar</title>
+    <ClientRouter />
+  </head>
+  <body class="min-h-screen bg-c1 text-c7 antialiased">
+
+    <!-- WIP Hero -->
+    <section class="relative grid grid-rows-[1fr_auto] min-h-svh w-full bg-c8 lg:block lg:h-svh lg:overflow-hidden">
+
+      <!-- Desktop background Lottie — hidden on mobile -->
+      <LottiePlayer
+        src="/lottie/desktop_hero_fixed_1.json"
+        loop={true}
+        autoplay={true}
+        fit="cover"
+        align={[0.5, 1]}
+        class="hidden lg:block absolute inset-0 w-full h-full z-0"
+      />
+
+      <!-- Logo + title + bar + subtitle + arrow -->
+      <div class="flex flex-col items-center justify-center gap-8 px-6 pt-12 [@media(max-height:700px)]:pt-36 text-center text-c7
+                  lg:pt-0 lg:absolute lg:left-1/2 lg:-translate-x-1/2
+                  lg:top-[42%] lg:-translate-y-1/2 lg:z-10">
+        <img
+          src="/assets/logo_square.svg"
+          alt="Fundación Iván Tovar"
+          class="w-72 md:w-120 lg:w-lg"
+        />
+        <h1 class="text-3xl md:text-4xl lg:text-5xl font-black leading-tight">
+          {t.hero.title}
+        </h1>
+
+        <!-- Language switcher (left) + social links (right) -->
+        <div class="flex items-center gap-9">
+          <div class="flex items-center gap-2 bg-c8 px-4 py-2">
+            {(["es", "en", "fr"] as Locale[]).map((l) => (
+              <a
+                href={localePath(l)}
+                class={`text-sm px-1 py-0.5 transition-colors ${l === locale ? "bg-c2 text-c1 pointer-events-none" : "text-c7 hover:bg-c2/50"}`}
+                aria-current={l === locale ? "true" : undefined}
+              >
+                {localeLabels[l]}
+              </a>
+            ))}
+          </div>
+          <div class="flex items-center gap-4">
+            <a href="https://www.instagram.com/fundacionivantovar/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" class="w-10 h-10 rounded-full bg-c6 flex items-center justify-center text-c1 hover:scale-105 transition-transform duration-200">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+                <circle cx="12" cy="12" r="4"/>
+                <circle cx="17.5" cy="6.5" r="0.5" fill="currentColor" stroke="none"/>
+              </svg>
+            </a>
+            <a href="https://www.youtube.com/@ivantovar4713" target="_blank" rel="noopener noreferrer" aria-label="YouTube" class="w-10 h-10 rounded-full bg-c6 flex items-center justify-center text-c1 hover:scale-105 transition-transform duration-200">
+              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+              </svg>
+            </a>
+            <a href="https://www.facebook.com/profile.php?id=100077794375446" target="_blank" rel="noopener noreferrer" aria-label="Facebook" class="w-10 h-10 rounded-full bg-c6 flex items-center justify-center text-c1 hover:scale-105 transition-transform duration-200">
+              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+              </svg>
+            </a>
+          </div>
+        </div>
+
+        <p class="max-w-sm md:max-w-xl lg:max-w-[33.6rem] md:text-[1.5625rem] lg:text-2xl leading-relaxed opacity-90">
+          {t.hero.subtitle}
+        </p>
+        <button
+          type="button"
+          aria-label="Ir al formulario de contacto"
+          onclick="document.getElementById('contacto').scrollIntoView({ behavior: 'smooth' })"
+          class="flex items-center justify-center w-40 md:w-56 py-6 cursor-pointer bg-transparent border-0"
+        >
+          <img
+            src="/assets/arrow.svg"
+            alt=""
+            class="w-10 md:w-17.5 animate-bounce pointer-events-none"
+          />
+        </button>
+      </div>
+
+      <!-- Mobile Lottie — hidden on desktop -->
+      <div class="lg:hidden w-full">
+        <LottiePlayer
+          src="/lottie/mobile_hero_fixed_1.json"
+          loop={true}
+          autoplay={true}
+          fit="contain"
+          class="w-full block"
+          style="aspect-ratio: 822 / 840"
+        />
+      </div>
+
+    </section>
+
+    <!-- Contact form -->
+    <ContactFormSection lang={locale} />
+    <img src="/assets/bottom_section_separation.svg" alt="" class="w-full block bg-c8" />
+
+    <!-- Newsletter + social -->
+    <NewsletterSection lang={locale} />
+
+    <!-- Minimal footer: logo only -->
+    <footer class="bg-c2 text-c1 px-8 py-8">
+      <img src="/assets/icons/fundacion_wide_logo.svg" alt="Fundación Iván Tovar" class="w-full h-auto" />
+    </footer>
+
+  </body>
+</html>

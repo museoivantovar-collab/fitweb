@@ -1,0 +1,105 @@
+---
+import type { Locale } from "@/lib/i18n";
+import { getMediaUrl } from "@/lib/cms";
+import { useExponemosTranslations } from "./exponemos.i18n";
+import type { Exposicion, Media } from "@fundacion/types";
+
+interface Props {
+  lang: Locale;
+  exposiciones: Exposicion[];
+}
+
+const { lang, exposiciones } = Astro.props;
+const t = useExponemosTranslations(lang);
+
+const expoImages = exposiciones.map((expo) => {
+  const media =
+    typeof expo.imagenPortada === "object" && expo.imagenPortada !== null
+      ? (expo.imagenPortada as Media)
+      : null;
+  const url = getMediaUrl(media?.url);
+  const alt = `${t.imageAlt} ${expo.titulo}`;
+  return { id: expo.id, url, alt };
+});
+---
+
+<!-- Background image layer: fixed, full viewport, pointer-events-none -->
+{expoImages.map((img) =>
+  img.url ? (
+    <div
+      data-expo-bg={img.id}
+      transition:name={`expo-bg-${img.id}`}
+      aria-hidden="true"
+      class="fixed inset-0 z-0 pointer-events-none opacity-0 transition-opacity duration-500"
+    >
+      <img
+        src={img.url}
+        alt={img.alt}
+        class="w-full h-full object-cover"
+      />
+    </div>
+  ) : null
+)}
+
+<!-- Content layer -->
+<section class="relative z-10 w-full min-h-screen px-8 md:px-16 lg:px-24 py-16 flex flex-col">
+
+  <!-- Page header: icon + title + description -->
+  <header class="flex flex-col md:flex-row items-start md:items-center gap-6 mb-16">
+    <img
+      src="/assets/icons/exponemos_icon.svg"
+      alt=""
+      aria-hidden="true"
+      class="shrink-0 w-auto h-full"
+    />
+
+    <!-- Title + description -->
+    <div class="flex flex-col">
+      <h1 class="text-5xl md:text-6xl font-black text-c7 leading-none">
+        {t.pageTitle}
+      </h1>
+      <p class="mt-3 text-sm md:text-base text-c7/70 max-w-md leading-relaxed">
+        {t.description}
+      </p>
+    </div>
+  </header>
+
+  <!-- Exposition list -->
+  <ul class="flex flex-col">
+    {exposiciones.map((expo) => (
+      <li>
+        <a
+          href={`/${lang}/exponemos/${expo.slug}`}
+          data-expo-item={expo.id}
+          class="block py-6 text-4xl md:text-5xl lg:text-8xl font-black text-c7 leading-none transition-colors duration-200 hover:text-c2"
+        >
+          {expo.titulo}
+        </a>
+      </li>
+    ))}
+  </ul>
+
+</section>
+
+<script>
+  function initHover() {
+    const items = document.querySelectorAll<HTMLElement>("[data-expo-item]");
+
+    items.forEach((item) => {
+      const id = item.dataset.expoItem;
+      const bg = document.querySelector<HTMLElement>(`[data-expo-bg="${id}"]`);
+
+      if (!bg) return;
+
+      item.addEventListener("mouseenter", () => {
+        bg.style.opacity = "0.4";
+      });
+
+      item.addEventListener("mouseleave", () => {
+        bg.style.opacity = "0";
+      });
+    });
+  }
+
+  document.addEventListener("astro:page-load", initHover);
+</script>

@@ -1,0 +1,13 @@
+---
+import { guardLocale, SUPPORTED_LOCALES } from "../../lib/i18n";
+
+export function getStaticPaths() {
+  return SUPPORTED_LOCALES.map((lang) => ({ params: { lang } }));
+}
+
+const { lang } = Astro.params as { lang: string };
+const invalid = guardLocale(lang);
+if (invalid) return invalid;
+
+// WIP: redirect /{lang} → /{lang}/wip (revert when ready to launch)
+return Astro.redirect(`/${lang}/wip`, 302);

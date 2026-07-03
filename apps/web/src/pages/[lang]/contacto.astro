@@ -1,0 +1,31 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { guardLocale, SUPPORTED_LOCALES, type Locale } from "../../lib/i18n";
+import { useContactTranslations } from "../../components/contact/contact.i18n";
+import ContactFormSection from "../../components/contact-form/ContactFormSection.astro";
+import NewsletterSection from "../../components/contact/NewsletterSection.astro";
+
+export function getStaticPaths() {
+  return SUPPORTED_LOCALES.map((lang) => ({ params: { lang } }));
+}
+
+const { lang } = Astro.params as { lang: string };
+const invalid = guardLocale(lang);
+if (invalid) return invalid;
+
+const locale = lang as Locale;
+const t = useContactTranslations(locale);
+---
+
+<BaseLayout lang={locale} title={t.pageTitle}>
+  <!-- Page title -->
+  <div class="pl-8 md:pl-12 lg:pl-16 pt-12 pb-8">
+    <h1 class="text-4xl md:text-5xl font-black text-c7">{t.pageTitle}</h1>
+  </div>
+
+  <!-- Contact form (reused) -->
+  <ContactFormSection lang={locale} />
+    <img src="/assets/bottom_section_separation.svg" alt="" class="w-full block bg-c8" />
+  <!-- Newsletter -->
+  <NewsletterSection lang={locale} />
+</BaseLayout>

@@ -1,0 +1,110 @@
+---
+import type { Locale } from "@/lib/i18n";
+import { useNavTranslations } from "./navigation.i18n";
+
+interface Props {
+  lang: Locale;
+}
+
+const { lang } = Astro.props;
+const t = useNavTranslations(lang);
+const f = t.footer;
+---
+
+<footer class="bg-c2 text-c1 px-8 pt-8 pb-10">
+  <!-- Large title -->
+  <div class="pb-6 mb-8">
+    <img src="/assets/icons/fundacion_wide_logo.svg" alt="Fundación Iván Tovar" class="w-full h-auto" />
+  </div>
+
+  <!-- Bottom grid -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[auto_auto_auto_auto] xl:grid-cols-[auto_auto_auto_auto_1fr] gap-x-12 gap-y-8 items-start">
+
+    <!-- Col 1: Navegación + first links -->
+    <div>
+      <p class="text-xl uppercase tracking-widest mb-3 opacity-70">{f.navLabel}</p>
+      <ul>
+        <li class="mb-3"><a href={`/${lang}/`} class="font-bold hover:underline text-xl">{f.links.home}</a></li>
+        <li class="mb-3"><a href={`/${lang}/sobre-tovar`} class="font-bold hover:underline text-xl">{f.links.biografiaTovar}</a></li>
+        <li class="mb-3"><a href={`/${lang}/sobre-fundacion`} class="font-bold hover:underline text-xl">{f.links.sobreFundacion}</a></li>
+      </ul>
+    </div>
+
+    <!-- Col 2: What we do -->
+    <div class="-mt-8 sm:mt-0">
+      <p class="hidden sm:block text-xl uppercase tracking-widest mb-3 opacity-0 select-none">–</p>
+      <ul>
+        <li class="mb-3"><a href={`/${lang}/conservamos`} class="font-bold hover:underline text-xl">{f.links.conservamos}</a></li>
+        <li class="mb-3"><a href={`/${lang}/publicamos`} class="font-bold hover:underline text-xl">{f.links.publicamos}</a></li>
+        <li class="mb-3"><a href={`/${lang}/exponemos`} class="font-bold hover:underline text-xl">{f.links.exponemos}</a></li>
+      </ul>
+    </div>
+
+    <!-- Col 3: Archive + editorial -->
+    <div class="-mt-8 sm:mt-0">
+      <p class="hidden sm:block text-xl uppercase tracking-widest mb-3 opacity-0 select-none">–</p>
+      <ul>
+        <li class="mb-3"><a href={`/${lang}/noticias`} class="font-bold hover:underline text-xl">{f.links.blogEditorial}</a></li>
+        <li class="mb-3"><a href={`/${lang}/exponemos`} class="font-bold hover:underline text-xl">{f.links.archivoDigital}</a></li>
+        <li class="mb-3">
+          <a href="https://fundacion-ivan-tovar.myshopify.com" target="_blank" rel="noopener noreferrer" class="font-bold hover:underline text-xl inline-flex items-center gap-0.5">
+            {f.links.tienda}<svg class="inline-block w-[0.6em] h-auto relative -top-[0.4em] rotate-45 shrink-0 text-c1" viewBox="0 0 34 20" fill="none" aria-hidden="true"><path d="M20.9577 19.1442C21.159 18.6707 22.8872 15.0825 25.7793 15.5821C27.4813 15.8775 27.4594 17.8671 27.4463 18.5404C30.474 18.6925 33.8299 19.1486 33.8299 19.1486L16.9149 -1.18237e-05L0 19.1486C0 19.1486 3.35586 18.6968 6.38357 18.5404C6.37044 17.8714 6.34857 15.8775 8.05493 15.5821C10.947 15.0825 12.6709 18.6707 12.8721 19.1442L20.9577 19.1442Z" fill="currentColor"/></svg>
+          </a>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Col 4: Síguenos -->
+    <div>
+      <p class="text-xl uppercase tracking-widest mb-3 opacity-70">{f.siguenos}</p>
+      <ul>
+        <li class="mb-3">
+          <a href="#" class="font-bold hover:underline text-xl inline-flex items-center gap-2">
+            <!-- Instagram icon -->
+            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+              <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+              <circle cx="12" cy="12" r="4"/>
+              <circle cx="17.5" cy="6.5" r="0.5" fill="currentColor" stroke="none"/>
+            </svg>
+            Instagram
+          </a>
+        </li>
+        <li class="mb-3">
+          <a href="#" class="font-bold hover:underline text-xl inline-flex items-center gap-2">
+            <!-- YouTube icon -->
+            <svg class="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+            </svg>
+            Youtube
+          </a>
+        </li>
+        <li class="mb-3">
+          <a href="#" class="font-bold hover:underline text-xl inline-flex items-center gap-2">
+            <!-- Facebook icon -->
+            <svg class="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+            </svg>
+            Facebook
+          </a>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Col 5: CTA -->
+    <div class="flex flex-col items-start justify-end sm:col-span-2 lg:col-span-4 xl:col-span-1 xl:items-end xl:justify-center">
+      <div class="flex flex-col justify-end">
+        <p class="font-bold text-xl text-white mb-3">{f.algunaDuda}</p>
+        <a
+          href={`/${lang}/contacto`}
+          class="inline-flex items-stretch text-c1 font-normal text-xl hover:opacity-90 transition-opacity h-12"
+        >
+          <span class="px-5 py-3 flex items-center bg-c7">{f.contactanos}</span>
+          <svg class="h-full w-auto" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M49.9924 25L33.486 35.6178C33.486 35.6178 33.2341 27.9696 22.9348 29.3619C11.9408 30.8497 14.2541 50 14.2541 50H0V0H14.2617C14.2617 0 11.9408 19.1563 22.9424 20.6381C33.2417 22.0304 33.4937 14.3822 33.4937 14.3822L50 25H49.9924Z" class="fill-c7"/>
+          </svg>
+        </a>
+      </div>
+    </div>
+
+  </div>
+</footer>

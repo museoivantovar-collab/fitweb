@@ -1,0 +1,21 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { guardLocale, SUPPORTED_LOCALES, type Locale } from "../../lib/i18n";
+import TovarBiography from "../../components/sobre-tovar/TovarBiography.astro";
+import Wheel from "../../components/general/Wheel.astro";
+
+export function getStaticPaths() {
+  return SUPPORTED_LOCALES.map((lang) => ({ params: { lang } }));
+}
+
+const { lang } = Astro.params as { lang: string };
+const invalid = guardLocale(lang);
+if (invalid) return invalid;
+
+const locale = lang as Locale;
+---
+
+<BaseLayout lang={locale} title="Sobre Tovar">
+  <TovarBiography lang={locale} />
+  <Wheel lang={locale} />
+</BaseLayout>

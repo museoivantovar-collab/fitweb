@@ -1,0 +1,100 @@
+---
+import type { Locale } from "@/lib/i18n";
+import { useContactTranslations } from "./contact.i18n";
+
+interface Props {
+  lang: Locale;
+}
+
+const { lang } = Astro.props;
+const t = useContactTranslations(lang);
+const n = t.newsletter;
+---
+
+<section class="w-full bg-c8 py-24 px-4 md:px-8">
+  <div class="relative max-w-6xl mx-auto bg-c1 overflow-hidden min-h-87.5 flex items-center">
+
+    <div class="relative w-full px-10 md:px-16 py-12 lg:py-16">
+      <div class="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+
+        <div>
+          <h2 class="text-3xl md:text-4xl text-c7 mb-4">
+            {n.title}
+          </h2>
+          <p class="text-c7 text-sm md:text-base leading-relaxed max-w-xs mb-8">
+            {n.description}
+          </p>
+        </div>
+
+        <div>
+          <p class="text-xl md:text-2xl text-c7 mb-6">{n.stayUpdated}</p>
+          <form id="newsletter-form" class="flex flex-col gap-6" novalidate>
+            <input
+              type="email"
+              id="newsletter-email"
+              name="email"
+              placeholder={n.emailPlaceholder}
+              required
+              class="w-full bg-c7 text-c1 placeholder:text-c1/50 px-4 py-4 focus:outline-none"
+            />
+            <p id="newsletter-msg" class="hidden text-sm" aria-live="polite"></p>
+            <button
+              type="submit"
+              id="newsletter-btn"
+              class="group inline-flex items-stretch self-start font-bold text-lg h-12 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <span class="px-8 flex items-center border border-c2 text-c2 bg-transparent transition-colors duration-300 group-hover:bg-c2 group-hover:text-c1">
+                {n.subscribe}
+              </span>
+              <svg class="h-full w-auto" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M49.9924 25L33.486 35.6178C33.486 35.6178 33.2341 27.9696 22.9348 29.3619C11.9408 30.8497 14.2541 50 14.2541 50H0V0H14.2617C14.2617 0 11.9408 19.1563 22.9424 20.6381C33.2417 22.0304 33.4937 14.3822 33.4937 14.3822L50 25H49.9924Z" class="fill-c2 transition-colors duration-300"/>
+              </svg>
+            </button>
+          </form>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<script is:inline define:vars={{ successMsg: n.successMessage, alreadyMsg: n.alreadySubscribed, errorMsg: n.errorMessage }}>
+  const form = /** @type {HTMLFormElement} */ (document.getElementById("newsletter-form"));
+  const emailInput = /** @type {HTMLInputElement} */ (document.getElementById("newsletter-email"));
+  const btn = /** @type {HTMLButtonElement} */ (document.getElementById("newsletter-btn"));
+  const msg = /** @type {HTMLParagraphElement} */ (document.getElementById("newsletter-msg"));
+
+  form?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const email = emailInput.value.trim();
+    if (!email) return;
+
+    btn.disabled = true;
+    msg.className = "text-sm text-c7/60";
+    msg.textContent = "…";
+
+    try {
+      const res = await fetch("/api/newsletter", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+
+      if (res.ok) {
+        msg.className = "text-sm text-green-400";
+        msg.textContent = successMsg;
+        form.reset();
+      } else if (res.status === 409) {
+        msg.className = "text-sm text-c7/60";
+        msg.textContent = alreadyMsg;
+        btn.disabled = false;
+      } else {
+        throw new Error();
+      }
+    } catch {
+      msg.className = "text-sm text-red-400";
+      msg.textContent = errorMsg;
+      btn.disabled = false;
+    }
+  });
+</script>

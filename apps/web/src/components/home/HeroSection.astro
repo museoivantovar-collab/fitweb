@@ -1,0 +1,56 @@
+---
+import type { Locale } from "@/lib/i18n";
+import { useHomeTranslations } from "./home.i18n";
+import LottiePlayer from "@/components/ui/LottiePlayer.astro";
+
+interface Props {
+  lang: Locale;
+}
+
+const { lang } = Astro.props;
+const t = useHomeTranslations(lang);
+---
+
+<section class="relative grid grid-rows-[1fr_auto] min-h-svh w-full bg-c8 -mt-16 lg:block lg:h-svh lg:overflow-hidden">
+
+  <!-- Desktop background: desktop_hero Lottie — hidden on mobile -->
+  <LottiePlayer
+    src="/lottie/desktop_hero_fixed_1.json"
+    loop={true}
+    autoplay={true}
+    fit="cover"
+    class="hidden lg:block absolute inset-0 w-full h-full z-0"
+  />
+
+  <!-- Logo + subtitle + arrow -->
+  <div class="flex flex-col items-center justify-center gap-8 px-6 pt-24 [@media(max-height:700px)]:pt-36 text-center text-c7
+              lg:pt-0 lg:absolute lg:left-1/2 lg:-translate-x-1/2
+              lg:top-[42%] lg:-translate-y-1/2 lg:z-10">
+    <img
+      src="/assets/logo_square.svg"
+      alt="Fundación Iván Tovar"
+      class="w-72 md:w-120 lg:w-lg"
+    />
+    <p class="max-w-xs md:max-w-120 md:text-[1.5625rem] lg:max-w-md lg:text-2xl leading-relaxed opacity-90">
+      {t.hero.subtitle}
+    </p>
+    <img
+      src="/assets/arrow.svg"
+      alt=""
+      class="w-10 md:w-17.5 animate-bounce"
+    />
+  </div>
+
+  <!-- Bottom row: mobile_hero Lottie — hidden on desktop -->
+  <div class="lg:hidden w-full">
+    <LottiePlayer
+      src="/lottie/mobile_hero_fixed_1.json"
+      loop={true}
+      autoplay={true}
+      fit="contain"
+      class="w-full block"
+      style="aspect-ratio: 822 / 840"
+    />
+  </div>
+
+</section>

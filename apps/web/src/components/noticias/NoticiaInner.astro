@@ -1,0 +1,166 @@
+---
+import type { Locale } from "@/lib/i18n";
+import { getMediaUrl } from "@/lib/cms";
+import { useNoticiasTranslations } from "./noticias.i18n";
+import { serializeRichText } from "@/lib/richtext";
+import type { Noticia, Media } from "@fundacion/types";
+
+interface Props {
+  lang: Locale;
+  noticia: Noticia;
+}
+
+const { lang, noticia } = Astro.props;
+const t = useNoticiasTranslations(lang);
+
+const imagen = typeof noticia.imagen === "object" && noticia.imagen !== null
+  ? (noticia.imagen as Media)
+  : null;
+
+const badgeClass: Record<string, string> = {
+  actualidad: "bg-c4",
+  publicaciones: "bg-c3",
+  eventos: "bg-c2",
+};
+
+const badgeColor = noticia.categoria ? badgeClass[noticia.categoria] ?? "" : "";
+const categoryLabel = noticia.categoria
+  ? t.filters[noticia.categoria as keyof typeof t.filters]
+  : null;
+
+const formattedDate = new Date(noticia.fecha).toLocaleDateString(lang, {
+  year: "numeric",
+  month: "long",
+  day: "numeric",
+});
+
+const bodyHtml = serializeRichText(noticia.contenido);
+---
+
+<section class="w-full min-h-svh bg-c1 -mt-16">
+  <!-- Mobile image (top, not sticky) -->
+  {getMediaUrl(imagen?.url) ? (
+    <div class="lg:hidden w-full h-[50svh] overflow-hidden">
+      <img
+        src={getMediaUrl(imagen?.url)!}
+        alt={imagen!.alt ?? noticia.titulo}
+        class="w-full h-full object-cover"
+      />
+    </div>
+  ) : (
+    <div class="lg:hidden w-full h-[50svh] bg-c7/10" />
+  )}
+
+  <!-- Desktop: two columns -->
+  <div class="flex flex-col lg:grid lg:grid-cols-2 lg:min-h-svh">
+
+    <!-- Left: content column -->
+    <div class="px-8 lg:px-16 xl:px-20 py-12 pt-8 lg:pt-36 flex flex-col">
+
+      <!-- Back button -->
+      <a
+        href={`/${lang}/noticias`}
+        aria-label={t.backLabel}
+        class="self-start text-c6 hover:opacity-70 transition-opacity"
+      >
+        <svg class="h-6 w-auto" width="50" height="24" viewBox="0 0 50 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M49.8915 17.5362C48.6751 17.0112 33.9835 10.3388 24.6569 14.3029C24.3311 14.4385 21.8854 15.6198 22.2242 17.5931C22.424 18.7569 23.7837 18.7394 24.2398 18.7307C24.3441 20.7958 24.6525 23.0841 24.6525 23.0841L1.21536e-05 11.542L24.6525 1.15529e-06C24.6525 1.15529e-06 24.3441 2.28828 24.2398 4.3578C23.7837 4.34905 22.424 4.33593 22.2242 5.49538C21.881 7.46864 24.3311 8.6456 24.6569 8.78561C33.9835 12.7496 48.6751 6.0773 49.8915 5.55227L49.8915 17.5362Z" fill="currentColor"/>
+        </svg>
+      </a>
+
+      <!-- Title -->
+      <h1 class="text-c7 font-black text-3xl md:text-4xl lg:text-5xl leading-tight mt-8 mb-4">
+        {noticia.titulo}
+      </h1>
+
+      <!-- Meta: date + category -->
+      <div class="flex flex-wrap items-center gap-3 mb-6">
+        <div class="flex items-center gap-1.5 text-c7/50 text-sm">
+          <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          <time datetime={noticia.fecha}>{formattedDate}</time>
+        </div>
+        {categoryLabel && (
+          <span class={`${badgeColor} text-c7 text-xs font-semibold uppercase tracking-wide px-2.5 py-1`}>
+            {categoryLabel}
+          </span>
+        )}
+      </div>
+
+      <!-- Extracto -->
+      {noticia.extracto && (
+        <p class="text-c7/70 text-lg leading-relaxed mb-6 font-medium">
+          {noticia.extracto}
+        </p>
+      )}
+
+      <!-- Rich text body -->
+      {bodyHtml && (
+        <div class="richtext text-c7/80 text-base leading-relaxed space-y-4">
+          <Fragment set:html={bodyHtml} />
+        </div>
+      )}
+    </div>
+
+    <!-- Right: sticky image (desktop only) -->
+    <div class="hidden lg:block sticky top-0 h-screen overflow-hidden">
+      {getMediaUrl(imagen?.url) ? (
+        <img
+          src={getMediaUrl(imagen?.url)!}
+          alt={imagen!.alt ?? noticia.titulo}
+          class="w-full h-full object-cover"
+        />
+      ) : (
+        <div class="w-full h-full bg-c7/10" />
+      )}
+    </div>
+
+  </div>
+</section>
+
+<style>
+  .richtext :global(h2) {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-top: 2rem;
+    margin-bottom: 0.5rem;
+    color: var(--color-c7);
+  }
+  .richtext :global(h3),
+  .richtext :global(h4) {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-top: 1.5rem;
+    margin-bottom: 0.25rem;
+    color: var(--color-c7);
+  }
+  .richtext :global(p) {
+    margin-bottom: 1rem;
+  }
+  .richtext :global(ul) {
+    list-style-type: disc;
+    padding-left: 1.5rem;
+    margin-bottom: 1rem;
+  }
+  .richtext :global(ol) {
+    list-style-type: decimal;
+    padding-left: 1.5rem;
+    margin-bottom: 1rem;
+  }
+  .richtext :global(blockquote) {
+    border-left: 3px solid var(--color-c2);
+    padding-left: 1rem;
+    color: var(--color-c7);
+    opacity: 0.7;
+    font-style: italic;
+    margin: 1.5rem 0;
+  }
+  .richtext :global(a) {
+    color: var(--color-c2);
+    text-decoration: underline;
+  }
+  .richtext :global(strong) {
+    font-weight: 700;
+  }
+</style>

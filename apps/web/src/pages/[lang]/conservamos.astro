@@ -1,0 +1,23 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { guardLocale, SUPPORTED_LOCALES, type Locale } from "../../lib/i18n";
+import ConservamosHero from "../../components/conservamos/ConservamosHero.astro";
+import ContactFormSection from "../../components/contact-form/ContactFormSection.astro";
+import { useConservamosTranslations } from "../../components/conservamos/conservamos.i18n";
+
+export function getStaticPaths() {
+  return SUPPORTED_LOCALES.map((lang) => ({ params: { lang } }));
+}
+
+const { lang } = Astro.params as { lang: string };
+const invalid = guardLocale(lang);
+if (invalid) return invalid;
+
+const locale = lang as Locale;
+const t = useConservamosTranslations(locale);
+---
+
+<BaseLayout lang={locale} title={t.pageTitle}>
+  <ConservamosHero lang={locale} />
+  <ContactFormSection lang={locale} />
+</BaseLayout>

@@ -1,0 +1,50 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import { guardLocale, SUPPORTED_LOCALES, type Locale } from "../../../lib/i18n";
+import { fetchCollection, fetchDoc } from "../../../lib/cms";
+import type { Exposicion } from "@fundacion/types";
+import ExposicionInner from "../../../components/exponemos/ExposicionInner.astro";
+
+export async function getStaticPaths() {
+  const paths = [];
+
+  for (const locale of SUPPORTED_LOCALES) {
+    const { docs } = await fetchCollection<Exposicion>("exposiciones", locale, {
+      sort: "-fechaInicio",
+      limit: "50",
+    });
+    for (let i = 0; i < docs.length; i++) {
+      paths.push({
+        params: { lang: locale, slug: docs[i].slug },
+        props: {
+          prevSlug: docs[i - 1]?.slug ?? null,
+          nextSlug: docs[i + 1]?.slug ?? null,
+        },
+      });
+    }
+  }
+
+  return paths;
+}
+
+const { lang, slug } = Astro.params as { lang: string; slug: string };
+const { prevSlug, nextSlug } = Astro.props as {
+  prevSlug: string | null;
+  nextSlug: string | null;
+};
+const invalid = guardLocale(lang);
+if (invalid) return invalid;
+
+const locale = lang as Locale;
+const exposicion = await fetchDoc<Exposicion>("exposiciones", slug, locale);
+if (!exposicion) return new Response(null, { status: 404 });
+---
+
+<BaseLayout lang={locale} title={exposicion.titulo} hideFooter>
+  <ExposicionInner
+    lang={locale}
+    exposicion={exposicion}
+    prevSlug={prevSlug}
+    nextSlug={nextSlug}
+  />
+</BaseLayout>

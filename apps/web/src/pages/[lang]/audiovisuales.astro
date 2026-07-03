@@ -1,0 +1,29 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { guardLocale, SUPPORTED_LOCALES, type Locale } from "../../lib/i18n";
+import { fetchCollection } from "../../lib/cms";
+import type { VideoYoutube } from "@fundacion/types";
+import VideoGridSection from "../../components/audiovisual/VideoGridSection.astro";
+
+export function getStaticPaths() {
+  return SUPPORTED_LOCALES.map((lang) => ({ params: { lang } }));
+}
+
+const { lang } = Astro.params as { lang: string };
+const invalid = guardLocale(lang);
+if (invalid) return invalid;
+
+const locale = lang as Locale;
+
+const { docs } = await fetchCollection<VideoYoutube>(
+  "videos-youtube",
+  locale,
+  { sort: "orden", limit: "100" }
+);
+
+const videos = docs.map((v) => ({ youtubeId: v.youtubeId, titulo: v.titulo }));
+---
+
+<BaseLayout lang={locale} title="Audiovisual">
+  <VideoGridSection lang={locale} videos={videos} />
+</BaseLayout>

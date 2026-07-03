@@ -1,0 +1,53 @@
+---
+import type { Locale } from "@/lib/i18n";
+import { usePublicamosTranslations } from "./publicamos.i18n";
+import PublicacionAccordion from "./PublicacionAccordion.astro";
+import PublicacionViewer from "./PublicacionViewer.astro";
+import type { Publicacion } from "@fundacion/types";
+
+interface Props {
+  lang: Locale;
+  publicaciones: Publicacion[];
+}
+
+const { lang, publicaciones } = Astro.props;
+const t = usePublicamosTranslations(lang);
+---
+
+<section class="w-full min-h-screen bg-c1 flex flex-col lg:flex-row">
+
+  <!-- LEFT COLUMN -->
+  <div class="w-full lg:w-[45%] flex flex-col px-8 md:px-12 lg:px-16 py-16 lg:py-24">
+
+    <!-- Icon + title block -->
+    <header class="flex flex-col md:flex-row items-start md:items-center gap-5">
+      <img
+        src="/assets/icons/publicamos_icon.svg"
+        alt=""
+        aria-hidden="true"
+        class="shrink-0 w-auto h-full"
+      />
+
+      <div>
+        <h1 class="text-5xl md:text-6xl font-black text-c7 leading-none">
+          {t.pageTitle}
+        </h1>
+        <p class="mt-3 text-sm md:text-base text-c7/70 max-w-sm leading-relaxed italic">
+          {t.description}
+        </p>
+      </div>
+    </header>
+
+    <!-- Accordion list -->
+    {publicaciones.length > 0
+      ? <PublicacionAccordion lang={lang} publicaciones={publicaciones} />
+      : <p class="mt-8 text-c7/40 text-base">—</p>
+    }
+  </div>
+
+  <!-- RIGHT COLUMN -->
+  <div class="w-full h-[100vw] md:h-[75vw] lg:w-[55%] lg:h-[calc(100vh-4rem)] lg:sticky lg:top-16 flex flex-col px-8 md:px-12 py-16 lg:py-24 overflow-hidden">
+    <PublicacionViewer lang={lang} publicaciones={publicaciones} />
+  </div>
+
+</section>

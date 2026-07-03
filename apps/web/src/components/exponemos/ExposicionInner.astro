@@ -1,0 +1,214 @@
+---
+import type { Locale } from "@/lib/i18n";
+import { getMediaUrl } from "@/lib/cms";
+import { useExponemosTranslations } from "./exponemos.i18n";
+import type { Exposicion, Media } from "@fundacion/types";
+
+interface Props {
+  lang: Locale;
+  exposicion: Exposicion;
+  prevSlug?: string | null;
+  nextSlug?: string | null;
+}
+
+const { lang, exposicion, prevSlug, nextSlug } = Astro.props;
+const t = useExponemosTranslations(lang).detail;
+
+const media =
+  typeof exposicion.imagenPortada === "object" && exposicion.imagenPortada !== null
+    ? (exposicion.imagenPortada as Media)
+    : null;
+const portadaUrl = getMediaUrl(media?.url);
+
+// Format date: show only year if no fechaFin, otherwise "year – year"
+const startYear = exposicion.fechaInicio
+  ? new Date(exposicion.fechaInicio).getFullYear()
+  : null;
+const endYear = exposicion.fechaFin
+  ? new Date(exposicion.fechaFin).getFullYear()
+  : null;
+const dateLabel =
+  startYear && endYear && startYear !== endYear
+    ? `${startYear} – ${endYear}`
+    : startYear
+      ? String(startYear)
+      : null;
+
+// Extract plain text from a Payload Lexical node tree
+function extractLexicalText(node: unknown): string {
+  if (!node || typeof node !== "object") return "";
+  const n = node as Record<string, unknown>;
+  if (typeof n.text === "string") return n.text;
+  const children = n.children ?? (n.root ? [n.root] : []);
+  if (Array.isArray(children)) return (children as unknown[]).map(extractLexicalText).join(" ");
+  return "";
+}
+
+const descriptionText =
+  typeof exposicion.descripcion === "string"
+    ? exposicion.descripcion
+    : extractLexicalText(exposicion.descripcion);
+const hasDescription = descriptionText.length > 0;
+---
+
+<!-- Full-screen portada background -->
+{portadaUrl && (
+  <div
+    transition:name={`expo-bg-${exposicion.id}`}
+    class="fixed inset-0 z-0"
+    aria-hidden="true"
+  >
+    <img
+      src={portadaUrl}
+      alt={media?.alt ?? exposicion.titulo}
+      class="w-full h-full object-cover"
+    />
+  </div>
+)}
+
+<!-- Info card — bottom-left, ~45vw wide on desktop, full-width on mobile -->
+<aside
+  id="expo-info-card"
+  class="fixed bottom-0 left-0 z-10 w-full md:w-[70%] lg:w-[45vw] bg-c7 text-c1 p-6 md:p-8 flex flex-col gap-6 shadow-2xl"
+>
+  <!-- Buttons block: Salir left, arrows right — no padding (breaks out of parent p-6/p-8) -->
+  <div class="-mx-6 -mt-6 md:-mx-8 md:-mt-8 flex items-stretch justify-between">
+    <a
+      href={`/${lang}/exponemos`}
+      class="group flex items-center gap-2 bg-c2 px-6 py-4 text-c1 font-bold"
+    >
+      <img src="/icons/chevron_left.svg" alt="" aria-hidden="true" class="w-5 h-5 transition-transform duration-200 group-hover:-translate-x-1" />
+      {t.salir}
+    </a>
+
+    <div class="flex items-stretch">
+      {prevSlug ? (
+        <a
+          href={`/${lang}/exponemos/${prevSlug}`}
+          class="flex items-center justify-center bg-c6 px-6 py-4 hover:opacity-80 transition-opacity"
+          aria-label="Anterior"
+        >
+          <img src="/icons/arrow_left.svg" alt="" aria-hidden="true" class="w-5 h-5" />
+        </a>
+      ) : (
+        <span class="flex items-center justify-center bg-c6/30 px-6 py-4 opacity-40 cursor-not-allowed" aria-disabled="true">
+          <img src="/icons/arrow_left.svg" alt="" aria-hidden="true" class="w-5 h-5" />
+        </span>
+      )}
+      {nextSlug ? (
+        <a
+          href={`/${lang}/exponemos/${nextSlug}`}
+          class="flex items-center justify-center bg-c6 px-6 py-4 hover:opacity-80 transition-opacity"
+          aria-label="Siguiente"
+        >
+          <img src="/icons/arrow_right.svg" alt="" aria-hidden="true" class="w-5 h-5" />
+        </a>
+      ) : (
+        <span class="flex items-center justify-center bg-c6/30 px-6 py-4 opacity-40 cursor-not-allowed" aria-disabled="true">
+          <img src="/icons/arrow_right.svg" alt="" aria-hidden="true" class="w-5 h-5" />
+        </span>
+      )}
+    </div>
+  </div>
+
+  <!-- Info box: title, date/location, explorar galería -->
+  <div class="flex flex-col gap-3">
+    <h1 class="text-3xl md:text-4xl lg:text-5xl font-black text-c1 leading-tight">
+      {exposicion.titulo}
+    </h1>
+
+    {(dateLabel || exposicion.lugar) && (
+      <div class="flex items-center gap-4 text-sm text-c1/70">
+        {dateLabel && (
+          <span class="flex items-center gap-2">
+            <img src="/icons/calendar.svg" alt="" aria-hidden="true" class="w-4 h-4 shrink-0" />
+            <span>{t.fecha} {dateLabel}</span>
+          </span>
+        )}
+        {exposicion.lugar && (
+          <span class="flex items-center gap-2">
+            <img src="/icons/location.svg" alt="" aria-hidden="true" class="w-4 h-4 shrink-0" />
+            <span>{t.ubicacion} {exposicion.lugar}</span>
+          </span>
+        )}
+      </div>
+    )}
+
+    <a
+      href={`/${lang}/exponemos/${exposicion.slug}/galeria`}
+      class="group inline-flex items-stretch font-normal text-sm"
+    >
+      <span class="px-5 py-2 flex items-center border border-c1 text-c1 transition-colors group-hover:bg-c1 group-hover:text-c7">
+        {t.explorarGaleria}
+      </span>
+      <div class="bg-c1 px-3 flex items-center">
+        <img src="/icons/picture.svg" alt="" aria-hidden="true" class="w-5 h-5" />
+      </div>
+    </a>
+  </div>
+
+  <!-- Description -->
+  {hasDescription && (
+    <div class="flex flex-col gap-2">
+      <div class="overflow-hidden" id="expo-desc" style="max-height: 5rem;">
+        <p class="text-sm text-c1/80 leading-relaxed">
+          {descriptionText}
+        </p>
+      </div>
+      <button
+        id="expo-leer-mas"
+        class="group text-base font-bold text-c1 flex items-center gap-1 self-start cursor-pointer"
+        aria-expanded="false"
+      >
+        {t.leerMas}
+        <img src="/icons/chevron_up.svg" id="expo-leer-mas-icon" alt="" aria-hidden="true" class="w-5 h-5 transition-transform duration-300 group-hover:-translate-y-1" />
+      </button>
+    </div>
+  )}
+</aside>
+
+{hasDescription && (
+  <script>
+    import { gsap } from "gsap";
+
+    document.addEventListener("astro:page-load", () => {
+      const desc = document.getElementById("expo-desc");
+      const btn = document.getElementById("expo-leer-mas");
+      const icon = document.getElementById("expo-leer-mas-icon");
+      if (desc && btn) {
+        btn.addEventListener("click", () => {
+          const expanded = btn.getAttribute("aria-expanded") === "true";
+          if (expanded) {
+            desc.style.overflowY = "hidden";
+            gsap.to(desc, { maxHeight: "5rem", duration: 0.35, ease: "power2.in" });
+          } else {
+            gsap.to(desc, {
+              maxHeight: "16rem",
+              duration: 0.4,
+              ease: "power2.out",
+              onComplete: () => { desc.style.overflowY = "auto"; },
+            });
+          }
+          btn.setAttribute("aria-expanded", String(!expanded));
+          if (icon) icon.classList.toggle("rotate-180", !expanded);
+        });
+      }
+    });
+  </script>
+)}
+
+<script>
+  import { gsap } from "gsap";
+
+  document.addEventListener("astro:page-load", () => {
+    const card = document.getElementById("expo-info-card");
+    if (!card) return;
+
+    gsap.from(card, {
+      yPercent: 100,
+      duration: 0.7,
+      ease: "power3.out",
+      delay: 0.3,
+    });
+  });
+</script>

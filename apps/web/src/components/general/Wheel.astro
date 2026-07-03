@@ -1,0 +1,142 @@
+---
+import type { Locale } from "@/lib/i18n";
+import { fetchCollection, getMediaUrl } from "@/lib/cms";
+import type { Obra } from "@/../../../packages/types/src/payload-types";
+import { useGeneralTranslations } from "./general.i18n";
+
+interface Props {
+  lang: Locale;
+}
+
+const { lang } = Astro.props;
+const t = useGeneralTranslations(lang);
+
+const { docs: rawObras } = await fetchCollection<Obra>("obras", lang, { limit: "100" });
+const obras = [...rawObras].sort((a, b) => a.año - b.año);
+
+// Years from 2010 onward are grouped under the 2000s decade
+const toDecadeKey = (year: number): number =>
+  year >= 2010 ? 2000 : Math.floor(year / 10) * 10;
+
+const uniqueDecades = [...new Set(obras.map((o) => String(toDecadeKey(o.año))))].sort();
+
+const decadeColors = [
+  'var(--color-c2)',
+  'var(--color-c3)',
+  'var(--color-c4)',
+  'var(--color-c5)',
+  'var(--color-c6)',
+];
+
+const obrasByDecade = uniqueDecades.map((decade) => ({
+  decade,
+  items: obras.filter((o) => String(toDecadeKey(o.año)) === decade),
+}));
+---
+
+<section class="grid grid-cols-1 w-full bg-c1 py-12 lg:grid-cols-3 lg:py-24">
+
+  <!-- Obra box: row 1 on mobile/tablet, right column on desktop -->
+  <div class="flex items-center justify-center p-8 lg:order-2 lg:col-span-2">
+
+    <!-- Square box with dark background -->
+    <div id="wheel-box" class="aspect-square bg-c8 w-full overflow-y-auto max-h-[90svh]">
+      <div class="py-[50%]">
+      {obrasByDecade.map(({ decade, items }, i) => (
+        <>
+          <div class="mt-6 flex items-center gap-3 px-6" data-decade-header={decade}>
+            <div style={`width: 2rem; height: 3px; background-color: ${decadeColors[i % decadeColors.length]};`} />
+            <span class="font-bold text-sm text-c7">{decade} - {decade === "2000" ? t.wheel.present : parseInt(decade) + 9}</span>
+          </div>
+          {items.map((obra) => {
+            const imgUrl =
+              obra.imagen && typeof obra.imagen === "object" && "url" in obra.imagen
+                ? getMediaUrl((obra.imagen as { url?: string | null }).url)
+                : null;
+            return (
+              <div
+                class="flex gap-6 px-6 py-3 text-sm"
+                data-decade={toDecadeKey(obra.año)}
+                data-img={imgUrl ?? undefined}
+              >
+                <span class="shrink-0 w-12 text-c7/50">{obra.año}</span>
+                <span class:list={["text-c7", imgUrl ? "font-bold cursor-pointer" : "font-normal"]}>{obra.nombre}</span>
+              </div>
+            );
+          })}
+        </>
+      ))}
+      {obras.length === 0 && (
+        <div class="flex items-center justify-center h-full text-c7/30 text-sm p-6">
+          —
+        </div>
+      )}
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Decade nav: row 2 / horizontal scroll on mobile/tablet, left column on desktop -->
+  <div
+    id="decade-nav"
+    class="flex flex-row overflow-x-auto justify-start items-center gap-6 px-6 py-8
+           lg:order-1 lg:flex-col lg:overflow-x-visible lg:gap-3 lg:px-4 lg:py-0 lg:justify-center lg:items-center"
+  >
+    <p class="shrink-0 text-[1.75rem] font-medium text-c7 px-0 pb-2 lg:pb-4">{t.wheel.historyTitle}</p>
+    {uniqueDecades.map((decade, i) => (
+      <button
+        class="decade-nav-item shrink-0 text-4xl md:text-[3.375rem] lg:text-[6.75rem] font-bold leading-none select-none cursor-pointer"
+        style={`--decade-color: ${decadeColors[i % decadeColors.length]};`}
+        data-decade-nav={decade}
+        type="button"
+        aria-label={`Década de ${decade}`}
+      >
+        {decade}
+      </button>
+    ))}
+  </div>
+
+</section>
+
+<style>
+  .decade-nav-item {
+    color: transparent;
+    -webkit-text-stroke: 0.5px var(--decade-color);
+    background: none;
+    border: none;
+    padding: 0;
+    font-family: inherit;
+  }
+
+  .decade-nav-item.is-active {
+    color: var(--decade-color);
+  }
+
+  .decade-nav-item {
+    transition: color 0.2s ease, transform 0.2s ease;
+  }
+
+  .decade-nav-item:hover {
+    color: var(--decade-color);
+    transform: scale(1.05);
+  }
+
+  #decade-nav {
+    scrollbar-width: none;
+  }
+  #decade-nav::-webkit-scrollbar {
+    display: none;
+  }
+</style>
+
+<script>
+  import { initDecadeNav, initDecadeImages, initWheel, initObraImage, cleanup } from "@/gsap/wheel";
+
+  document.addEventListener("astro:before-swap", cleanup);
+  document.addEventListener("astro:page-load", () => {
+    initDecadeNav();
+    initDecadeImages();
+    initWheel();
+    initObraImage();
+  });
+</script>
